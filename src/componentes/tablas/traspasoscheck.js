@@ -7,9 +7,7 @@ import {
   ThemeProvider
 } from "@mui/material/styles";
 import Traspasos from "../../api/peticiones"; // Asegúrate de tener la importación correcta
-import EditNoteIcon from '@mui/icons-material/EditNote';
-
-
+import PhotoSizeSelectActualIcon from '@mui/icons-material/PhotoSizeSelectActual';
 const columns = [
   {
     name: "DOCID",
@@ -61,7 +59,7 @@ const columns = [
   },
   {
     name: "Evidencia",
-    label: "Registrar",
+    label: "Evidencia",
     options: {
       customBodyRender: (value, tableMeta, updateValue) => {
         return (
@@ -69,7 +67,7 @@ const columns = [
             variant="contained"
             component="label"
           >
-             <EditNoteIcon />
+             <PhotoSizeSelectActualIcon />
             <input
               type="file"
               accept="image/*"
@@ -82,8 +80,6 @@ const columns = [
     }
   },
 ];
-
-
 
 const handleFileUpload = (event, rowIndex, updateValue) => {
   const file = event.target.files[0];
@@ -135,20 +131,17 @@ const options = {
   },
 };
 
-export default function TbTraspaso (fecha) {
-  console.log(fecha);
+export default function App() {
   const [data, setData] = useState([]);
   const handleData = (fetchedData) => {
-    //filtar solo los que XSOLICITA SEAN != ""
-    const filteredData = fetchedData.filter(item => item.XSOLICITA == "");
-    
+    const filteredData = fetchedData.filter(item => item.XSOLICITA != "");
     setData(filteredData);
   };
 
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={createTheme()}>
-        <Traspasos option="46" fecha="2024-06-18" onData={handleData} />
+        <Traspasos option="46" fecha="2024-06-15" onData={handleData} />
             <MUIDataTable
               data={data}
               columns={columns}
