@@ -9,7 +9,6 @@ import {
 import Traspasos from "../../api/peticiones"; // Asegúrate de tener la importación correcta
 import EditNoteIcon from '@mui/icons-material/EditNote';
 
-
 const columns = [
   {
     name: "DOCID",
@@ -135,7 +134,7 @@ const options = {
   },
 };
 
-export default function TbTraspaso (fecha) {
+export default function TbTraspaso ({fecha}) {
   console.log(fecha);
   const [data, setData] = useState([]);
   const handleData = (fetchedData) => {
@@ -148,7 +147,7 @@ export default function TbTraspaso (fecha) {
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={createTheme()}>
-        <Traspasos option="46" fecha="2024-06-18" onData={handleData} />
+        <Traspasos option="46" fecha={fecha} onData={handleData} />
             <MUIDataTable
               data={data}
               columns={columns}
