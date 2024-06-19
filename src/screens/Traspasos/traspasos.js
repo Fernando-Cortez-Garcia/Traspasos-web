@@ -81,6 +81,7 @@ const Traspasos = () => {
             type='date'
             onChange={handleFechaChange}
           />
+          
         </div>
         <Box sx={{ width: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
