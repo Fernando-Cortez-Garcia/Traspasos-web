@@ -4,9 +4,7 @@ import { Button, Modal, Box, Typography, TextField } from "@mui/material";
 import { createTheme, StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 
-import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const apiUrl = process.env.REACT_APP_URL_PETICIONES;
@@ -201,7 +199,7 @@ export default function TbTraspaso({ fecha }) {
   };
 
   const handleRegister = () => {
-    
+
     // Validate inputs
     if (name.trim() === '') {
       alert("vacio")
@@ -212,22 +210,18 @@ export default function TbTraspaso({ fecha }) {
       return;
     }
 
-    // Construct data to send (adjust according to your API requirements)
+    
     const formData = new FormData();
+    formData.append('opcion', name);
     formData.append('nombreArchivo', name);
     formData.append('archivo', file);
-
-    // Perform your API request here using fetch or axios
     fetch('tu-url-de-api', {
       method: 'POST',
       body: formData,
-      // Adjust headers if necessary, like setting 'Content-Type': 'multipart/form-data'
     })
       .then(response => response.json())
       .then(data => {
-        // Handle success response
         console.log('Registro exitoso:', data);
-        // Optionally close the modal after successful submission
         handleClose();
       })
       .catch(error => {
