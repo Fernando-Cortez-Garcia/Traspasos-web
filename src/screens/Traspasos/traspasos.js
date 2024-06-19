@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState,useEffect } from 'react';
 import CssBaseline from '@mui/material/CssBaseline';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -42,7 +42,8 @@ function a11yProps(index) {
 }
 
 const Traspasos = () => {
-  const [value, setValue] = React.useState(0);
+  const [value, setValue] = useState(0);
+  const [fecha, setFecha] = useState('');
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -55,13 +56,18 @@ const Traspasos = () => {
     let day = fecha.getDate().toString().padStart(2, '0');
     let formattedDate = `${year}-${month}-${day}`;
     return formattedDate;
-  }  
+  }
 
   useEffect(() => {
-    document.getElementById('fecha-input').value = fechaActual();
+    const initialFecha = fechaActual();
+    setFecha(initialFecha);
+    document.getElementById('fecha-input').value = initialFecha;
   }, []);
-  
-  const fecha = fechaActual();
+
+  const handleFechaChange = (event) => {
+    const newFecha = event.target.value;
+    setFecha(newFecha);
+  };
 
   return (
     <ThemeProvider theme={defaultTheme}>
@@ -69,7 +75,12 @@ const Traspasos = () => {
         <CssBaseline />
         <h1>Traspasos Hidalgo</h1>
         <div className='container d-flex justify-content-center mt-2 mb-4'>
-          <input id='fecha-input' className='form form-control w-25' type='date' />
+          <input
+            id='fecha-input'
+            className='form form-control w-25'
+            type='date'
+            onChange={handleFechaChange}
+          />
         </div>
         <Box sx={{ width: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -82,7 +93,7 @@ const Traspasos = () => {
             <TbTraspaso fecha={fecha} />
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
-            <TbTraspasos2 />
+            <TbTraspasos2 fecha={fecha} />
           </CustomTabPanel>
         </Box>
       </Container>

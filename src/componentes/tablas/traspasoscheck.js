@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from "react";
 import MUIDataTable from "mui-datatables";
 import { Button } from "@mui/material";
-import {
-  createTheme,
-  StyledEngineProvider,
-  ThemeProvider
-} from "@mui/material/styles";
-import Traspasos from "../../api/peticiones"; // Asegúrate de tener la importación correcta
-import PhotoSizeSelectActualIcon from '@mui/icons-material/PhotoSizeSelectActual';
+import { createTheme, StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
+import EditNoteIcon from '@mui/icons-material/EditNote';
+
+const apiUrl = 'http://hidalgo.no-ip.info:5610/hidalgoapi/production/Panel.php';
+
 const columns = [
   {
     name: "DOCID",
     label: "Iddoc",
+    options: {
+      filter: true,
+      sort: true
+    }
+  },
+  {
+    name: "FECHA",
+    label: "FECHA",
     options: {
       filter: true,
       sort: true
@@ -59,7 +65,7 @@ const columns = [
   },
   {
     name: "Evidencia",
-    label: "Evidencia",
+    label: "Registrar",
     options: {
       customBodyRender: (value, tableMeta, updateValue) => {
         return (
@@ -67,7 +73,7 @@ const columns = [
             variant="contained"
             component="label"
           >
-             <PhotoSizeSelectActualIcon />
+            <EditNoteIcon />
             <input
               type="file"
               accept="image/*"
@@ -85,7 +91,7 @@ const handleFileUpload = (event, rowIndex, updateValue) => {
   const file = event.target.files[0];
   if (file) {
     console.log(`File uploaded in row ${rowIndex}:`, file);
-    updateValue(file.name); // Actualiza el valor de la celda si es necesario
+    updateValue(file.name); // Update the cell value if necessary
   }
 };
 
@@ -97,7 +103,7 @@ const options = {
   selectableRows: 'none',
   textLabels: {
     body: {
-      noMatch: "Lo siento, no se encontraron registros coincidentes",
+      noMatch: "No se encontraron traspasos Pendientes en esta fecha",
       toolTip: "Ordenar",
       columnHeaderTooltip: column => `Ordenar por ${column.label}`
     },
@@ -131,22 +137,57 @@ const options = {
   },
 };
 
-export default function App() {
+export default function TbTraspaso2({ fecha }) {
   const [data, setData] = useState([]);
-  const handleData = (fetchedData) => {
-    const filteredData = fetchedData.filter(item => item.XSOLICITA != "");
-    setData(filteredData);
-  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const myHeaders = new Headers();
+        myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJGZXJuYW5kbyIsIm5hbWUiOiJmZXIxMiIsImV4cCI6MTcxNjM5NjYyMCwiaWF0IjoxNzE2Mzk2NDQwfQ.XePwxaH6oBy0zwYCqiocdIhGSTLUEf-6XEPJWB-s5sA");
+
+        const formdata = new FormData();
+        formdata.append("opcion", "46");
+        formdata.append("fecha", fecha);
+
+        const requestOptions = {
+          method: "POST",
+          headers: myHeaders,
+          body: formdata,
+          redirect: "follow",
+        };
+
+        const response = await fetch(apiUrl, requestOptions);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const result = await response.text();
+
+        let parsedResult;
+        try {
+          parsedResult = JSON.parse(result);
+        } catch (e) {
+          throw new Error(`JSON parse error: ${e.message}`);
+        }
+
+        const filteredData = parsedResult.filter(item => item.XSOLICITA != "");
+        setData(filteredData);
+      } catch (error) {
+        console.error('Error:', error.message);
+      }
+    };
+
+    fetchData();
+  }, [fecha]);
 
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={createTheme()}>
-        <Traspasos option="46" fecha="2024-06-15" onData={handleData} />
-            <MUIDataTable
-              data={data}
-              columns={columns}
-              options={options}
-            />
+        <MUIDataTable
+          data={data}
+          columns={columns}
+          options={options}
+        />
       </ThemeProvider>
     </StyledEngineProvider>
   );
