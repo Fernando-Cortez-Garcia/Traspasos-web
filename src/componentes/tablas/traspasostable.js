@@ -4,7 +4,8 @@ import { Button } from "@mui/material";
 import { createTheme, StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import EditNoteIcon from '@mui/icons-material/EditNote';
 
-const apiUrl = 'http://hidalgo.no-ip.info:5610/hidalgoapi/production/Panel.php';
+const apiUrl = process.env.REACT_APP_URL_PETICIONES;
+alert(apiUrl);
 
 const columns = [
   {
