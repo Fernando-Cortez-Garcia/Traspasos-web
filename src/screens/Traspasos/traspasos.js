@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import CssBaseline from '@mui/material/CssBaseline';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -8,6 +8,8 @@ import PropTypes from 'prop-types';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
+import Grid from '@mui/material/Grid';
 import 'bootstrap/dist/css/bootstrap.css';
 
 const defaultTheme = createTheme();
@@ -47,21 +49,20 @@ const Traspasos = () => {
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
-  }
+  };
 
   const fechaActual = () => {
     let fecha = new Date();
     let year = fecha.getFullYear();
-    let month = (fecha.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-indexed
+    let month = (fecha.getMonth() + 1).toString().padStart(2, '0');
     let day = fecha.getDate().toString().padStart(2, '0');
     let formattedDate = `${year}-${month}-${day}`;
     return formattedDate;
-  }
+  };
 
   useEffect(() => {
     const initialFecha = fechaActual();
     setFecha(initialFecha);
-    document.getElementById('fecha-input').value = initialFecha;
   }, []);
 
   const handleFechaChange = (event) => {
@@ -73,19 +74,31 @@ const Traspasos = () => {
     <ThemeProvider theme={defaultTheme}>
       <Container component="main" maxWidth="xl">
         <CssBaseline />
-        <h1>Traspasos Hidalgo</h1>
-        <div className='container d-flex justify-content-center mt-2 mb-4'>
-          <input
-            id='fecha-input'
-            className='form form-control w-25'
-            type='date'
-            onChange={handleFechaChange}
-          />
-          
-        </div>
+        <h1 style={{ textAlign: 'center' }}>Traspasos Hidalgo</h1>
+        <Grid container justifyContent="center" className="mt-2 mb-4">
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              id='fecha-input'
+              label='Seleccione Fecha'
+              type='date'
+              value={fecha}
+              onChange={handleFechaChange}
+              fullWidth
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+          </Grid>
+        </Grid>
         <Box sx={{ width: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
+            <Tabs
+              value={value}
+              onChange={handleChange}
+              aria-label="basic tabs example"
+              variant="scrollable"
+              scrollButtons="auto"
+            >
               <Tab label="Traspasos Pendientes" {...a11yProps(0)} />
               <Tab label="Traspasos Completados" {...a11yProps(1)} />
             </Tabs>

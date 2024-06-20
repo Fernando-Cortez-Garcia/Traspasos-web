@@ -27,7 +27,6 @@ export default function TbTraspaso({ fecha }) {
   const [iddoc, setIddoc] = useState('');
   const [file, setFile] = useState(null);
 
-
   const handleOpen = (index, update, iddoc) => {
     setRowIndex(index);
     setUpdateValue(() => update);
@@ -40,21 +39,16 @@ export default function TbTraspaso({ fecha }) {
     setIddoc(''); // Reset iddoc when closing the modal
   };
 
-  // const handleRegister = () => {
-  //   // Aquí puedes manejar el registro de la información
-  //   console.log(`Registrando archivo: ${fileName} con nombre: ${name} en la fila: ${rowIndex} y iddoc: ${iddoc}`);
-  //   // Actualiza la celda o realiza cualquier otra acción necesaria
-  //   if (updateValue) {
-  //     updateValue({ fileName, name });
-  //   }
-  //   handleClose();
-  // };
+  const handleFileChange = (event) => {
+    const selectedFile = event.target.files[0];
+    setFile(selectedFile);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const myHeaders = new Headers();
-        myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJGZXJuYW5kbyIsIm5hbWUiOiJmZXIxMiIsImV4cCI6MTcxNjM5NjYyMCwiaWF0IjoxNzE2Mzk2NDQwfQ.XePwxaH6oBy0zwYCqiocdIhGSTLUEf-6XEPJWB-s5sA");
+        myHeaders.append("Authorization", "Bearer YOUR_TOKEN_HERE");
 
         const formdata = new FormData();
         formdata.append("opcion", "46");
@@ -199,37 +193,64 @@ export default function TbTraspaso({ fecha }) {
   };
 
   const handleRegister = () => {
-
     // Validate inputs
     if (name.trim() === '') {
-      alert("vacio")
+      alert("El nombre está vacío");
       return;
     }
     if (file === null) {
-     
+      alert("El archivo está vacío");
       return;
     }
-
-    
+  
     const formData = new FormData();
-    formData.append('opcion', name);
-    formData.append('nombreArchivo', name);
-    formData.append('archivo', file);
-    fetch('tu-url-de-api', {
+    formData.append('opcion', '42');
+    formData.append('nombre', name);
+    formData.append('docid', iddoc);  // Ensure iddoc is correct and coming from the right source
+  
+    fetch('http://hidalgo.no-ip.info:5610/hidalgoapi/production/Panel.php', {
       method: 'POST',
       body: formData,
     })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Registro exitoso:', data);
-        handleClose();
-      })
-      .catch(error => {
-        // Handle error
-        console.error('Error al registrar:', error);
-        // Optionally display an error message
-        alert('Hubo un error al intentar registrar la evidencia.');
-      });
+    .then(response => response.json())
+    .then(data => {
+      console.log('Registro exitoso:', data);
+  
+      // Assuming the response contains a DOCID field
+      const docId = data.DOCID; 
+      if (docId) {
+        uploadPhoto(docId);
+      } else {
+        alert('No se obtuvo DOCID del registro.');
+      }
+  
+      handleClose();
+    })
+    .catch(error => {
+      console.error('Error al registrar:', error);
+      alert('Hubo un error al intentar registrar la evidencia.');
+    });
+  };
+
+  const uploadPhoto = (docId) => {
+    const photoData = new FormData();
+    photoData.append('opcion', '48');
+    photoData.append('docid', docId);
+    photoData.append('foto', file);
+
+    fetch('http://hidalgo.no-ip.info:5610/hidalgoapi/production/Panel.php', {
+      method: 'POST',
+      body: photoData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Foto subida exitosamente:', data);
+      alert('Registro y subida de foto exitosos.');
+    })
+    .catch(error => {
+      console.error('Error al subir la foto:', error);
+      alert('Hubo un error al intentar subir la foto.');
+    });
   };
 
   return (
@@ -274,6 +295,7 @@ export default function TbTraspaso({ fecha }) {
             <input
               type="file"
               className="form form-control"
+              onChange={handleFileChange}
             />
             <Button
               variant="contained"
