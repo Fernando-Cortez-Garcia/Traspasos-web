@@ -73,11 +73,11 @@ const Traspasos = () => {
     <ThemeProvider theme={defaultTheme}>
       <Container component="main" maxWidth="xl">
         <CssBaseline />
-        <h1>Traspasos Hidalgo</h1>
+        <h1 className='mt-4'>Traspasos Hidalgo</h1>
         <div className='container d-flex justify-content-center mt-2 mb-4'>
           <input
             id='fecha-input'
-            className='form form-control w-25'
+            className='form form-control w-25 mt-4'
             type='date'
             onChange={handleFechaChange}
           />
