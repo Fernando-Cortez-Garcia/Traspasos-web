@@ -1,40 +1,102 @@
-import { useEffect } from 'react';
+const apiUrl = process.env.REACT_APP_URL_PETICIONES;
 
-const apiUrl = 'http://hidalgo.no-ip.info:5610/hidalgoapi/production/Panel.php';
+const fetchTraspasos = async (fecha) => {
+  try {
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", "Bearer YOUR_TOKEN_HERE");
 
-const Traspasos = ({ option, fecha, onData }) => {
-  useEffect(() => {
-    const traspasos = async () => {
-      try {
-        const myHeaders = new Headers();
-        myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJGZXJuYW5kbyIsIm5hbWUiOiJmZXIxMiIsImV4cCI6MTcxNjM5NjYyMCwiaWF0IjoxNzE2Mzk2NDQwfQ.XePwxaH6oBy0zwYCqiocdIhGSTLUEf-6XEPJWB-s5sA");
+    const formdata = new FormData();
+    formdata.append("opcion", "46");
+    formdata.append("fecha", fecha);
 
-        const formdata = new FormData();
-        formdata.append("opcion", option);
-        formdata.append("fecha", fecha);
-
-        const requestOptions = {
-          method: "POST",
-          headers: myHeaders,
-          body: formdata,
-          redirect: "follow",
-        };
-
-        const respuesta = await fetch(apiUrl, requestOptions);
-        const result = await respuesta.text();
-        const parsedResult = JSON.parse(result);
-
-        onData(parsedResult);
-
-      } catch (error) {
-        console.error('Error:', error.message);
-      }
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: formdata,
+      redirect: "follow",
     };
 
-    traspasos();
-  }, []); // Empty dependency array to ensure it runs only once on mount
+    const response = await fetch(apiUrl, requestOptions);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const result = await response.text();
 
-  return null; // No need to return any UI component
+    let parsedResult;
+    try {
+      parsedResult = JSON.parse(result);
+    } catch (e) {
+      throw new Error(`JSON parse error: ${e.message}`);
+    }
+
+    const filteredData = parsedResult.filter(item => item.XSOLICITA === "");
+    return filteredData;
+  } catch (error) {
+    console.error('Error en fetchTraspasos:', error.message);
+    throw error; // Re-lanzar el error para manejarlo en el componente que llame a fetchTraspasos
+  }
 };
 
-export default Traspasos;
+const registerEvidence = async (nombre, docid, file) => {
+  try {
+    const formData = new FormData();
+    formData.append('opcion', '47');
+    formData.append('nombre', nombre);
+    formData.append('docid', docid);
+
+    const response = await fetch('http://hidalgo.no-ip.info:5610/hidalgoapi/production/Panel.php', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { status: text };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error en registerEvidence:', error.message);
+    throw error; // Re-lanzar el error para manejarlo en el componente que llame a registerEvidence
+  }
+};
+
+const uploadPhoto = async (docId, file) => {
+  try {
+    const photoData = new FormData();
+    photoData.append('opcion', '48');
+    photoData.append('docid', docId);
+    photoData.append('foto', file);
+
+    const response = await fetch('http://hidalgo.no-ip.info:5610/hidalgoapi/production/Panel.php', {
+      method: 'POST',
+      body: photoData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { status: text };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error en uploadPhoto:', error.message);
+    throw error; // Re-lanzar el error para manejarlo en el componente que llame a uploadPhoto
+  }
+};
+
+export { fetchTraspasos, registerEvidence, uploadPhoto };
