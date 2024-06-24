@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import MUIDataTable from "mui-datatables";
-import { Button, Modal, Box, Typography, TextField } from "@mui/material";
+import { Button, Modal, Box, Typography, TextField, Skeleton } from "@mui/material";
 import { createTheme, StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
-
+import { fetchTraspasos, registerEvidence, uploadPhoto } from "../../api/peticiones"; 
 import 'react-toastify/dist/ReactToastify.css';
 
 const apiUrl = process.env.REACT_APP_URL_PETICIONES;
@@ -19,6 +19,7 @@ const handleFileUpload = (event, rowIndex, updateValue) => {
 
 export default function TbTraspaso({ fecha }) {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true); // Estado para controlar la carga de datos
   const [open, setOpen] = useState(false);
   const [rowIndex, setRowIndex] = useState(null);
   const [updateValue, setUpdateValue] = useState(null);
@@ -45,45 +46,19 @@ export default function TbTraspaso({ fecha }) {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDataAndSetData = async () => {
       try {
-        const myHeaders = new Headers();
-        myHeaders.append("Authorization", "Bearer YOUR_TOKEN_HERE");
-
-        const formdata = new FormData();
-        formdata.append("opcion", "46");
-        formdata.append("fecha", fecha);
-
-        const requestOptions = {
-          method: "POST",
-          headers: myHeaders,
-          body: formdata,
-          redirect: "follow",
-        };
-
-        const response = await fetch(apiUrl, requestOptions);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const result = await response.text();
-
-        let parsedResult;
-        try {
-          parsedResult = JSON.parse(result);
-        } catch (e) {
-          throw new Error(`JSON parse error: ${e.message}`);
-        }
-
-        const filteredData = parsedResult.filter(item => item.XSOLICITA === "");
+        const filteredData = await fetchTraspasos(fecha);
         setData(filteredData);
+        setLoading(false); // Una vez cargados los datos, establece loading a false
       } catch (error) {
-        console.error('Error:', error.message);
+        console.error('Error en fetchDataAndSetData:', error.message);
       }
     };
 
-    fetchData();
+    fetchDataAndSetData();
   }, [fecha]);
-
+  
   const columns = [
     {
       name: "DOCID",
@@ -192,8 +167,8 @@ export default function TbTraspaso({ fecha }) {
     },
   };
 
-  const handleRegister = () => {
-    // Validate inputs
+  
+  const handleRegister = async () => {
     if (name.trim() === '') {
       alert("El nombre está vacío");
       return;
@@ -202,65 +177,64 @@ export default function TbTraspaso({ fecha }) {
       alert("El archivo está vacío");
       return;
     }
-  
-    const formData = new FormData();
-    formData.append('opcion', '42');
-    formData.append('nombre', name);
-    formData.append('docid', iddoc);  // Ensure iddoc is correct and coming from the right source
-  
-    fetch('http://hidalgo.no-ip.info:5610/hidalgoapi/production/Panel.php', {
-      method: 'POST',
-      body: formData,
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Registro exitoso:', data);
-  
-      // Assuming the response contains a DOCID field
-      const docId = data.DOCID; 
-      if (docId) {
-        uploadPhoto(docId);
+
+    try {
+      const registerResult = await registerEvidence(name, iddoc, file);
+
+      if (registerResult.status === 'exitoso' || registerResult.status === 'success') {
+        await uploadPhotoAndRefreshTable(iddoc, file); // Llama a uploadPhoto y actualiza la tabla después
       } else {
-        alert('No se obtuvo DOCID del registro.');
+        alert('Registro fallido, no se subirá la foto.');
       }
-  
-      handleClose();
-    })
-    .catch(error => {
-      console.error('Error al registrar:', error);
+
+      handleClose(); // Cierra el modal después de finalizar
+    } catch (error) {
+      console.error('Error en handleRegister:', error.message);
       alert('Hubo un error al intentar registrar la evidencia.');
-    });
+    }
   };
 
-  const uploadPhoto = (docId) => {
-    const photoData = new FormData();
-    photoData.append('opcion', '48');
-    photoData.append('docid', docId);
-    photoData.append('foto', file);
+  const uploadPhotoAndRefreshTable = async (docId, file) => {
+    try {
+      const photoUploadResult = await uploadPhoto(docId, file);
 
-    fetch('http://hidalgo.no-ip.info:5610/hidalgoapi/production/Panel.php', {
-      method: 'POST',
-      body: photoData,
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Foto subida exitosamente:', data);
-      alert('Registro y subida de foto exitosos.');
-    })
-    .catch(error => {
-      console.error('Error al subir la foto:', error);
+      console.log('Foto subida exitosamente:', photoUploadResult);
+      if (photoUploadResult.status === 'exitoso' || photoUploadResult.status === 'success') {
+        await refreshTable(); // Actualiza la tabla después de subir la foto
+        alert('Registro y subida de foto exitosos.');
+      } else {
+        alert('Hubo un error al intentar subir la foto.');
+      }
+    } catch (error) {
+      console.error('Error en uploadPhotoAndRefreshTable:', error.message);
       alert('Hubo un error al intentar subir la foto.');
-    });
+    }
+  };
+
+  const refreshTable = async () => {
+    try {
+      const filteredData = await fetchTraspasos(fecha);
+      setData(filteredData);
+    } catch (error) {
+      console.error('Error en refreshTable:', error.message);
+    }
   };
 
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={createTheme()}>
-        <MUIDataTable
-          data={data}
-          columns={columns}
-          options={options}
-        />
+        {loading ? ( // Si loading es true, muestra el skeleton
+          <Box sx={{ width: '100%', overflow: 'hidden' }}>
+            <Skeleton animation="wave" height={400} />
+          </Box>
+        ) : ( // Si loading es false, muestra la tabla
+          <MUIDataTable
+            data={data}
+            columns={columns}
+            options={options}
+          />
+        )}
+
         <Modal
           open={open}
           onClose={handleClose}
