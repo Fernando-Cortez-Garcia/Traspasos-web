@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import MUIDataTable from "mui-datatables";
-import { Button, Modal, Box, Typography, TextField } from "@mui/material";
+import { Button, Modal, Box, Typography, TextField, Skeleton } from "@mui/material";
 import { createTheme, StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import InsertPhotoIcon from '@mui/icons-material/InsertPhoto';
 
@@ -8,6 +8,7 @@ const apiUrl = process.env.REACT_APP_URL_PETICIONES;
 
 const TbTraspaso2 = ({ fecha }) => {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true); // Estado para controlar la carga de datos
   const [open, setOpen] = useState(false);
   const [iddoc, setIddoc] = useState(null);
 
@@ -43,6 +44,7 @@ const TbTraspaso2 = ({ fecha }) => {
 
         const filteredData = parsedResult.filter(item => item.XSOLICITA !== "");
         setData(filteredData);
+        setLoading(false); // Una vez cargados los datos, establece loading a false
       } catch (error) {
         console.error('Error:', error.message);
       }
@@ -155,7 +157,7 @@ const TbTraspaso2 = ({ fecha }) => {
     selectableRows: 'none',
     textLabels: {
       body: {
-        noMatch: "No se encontraron traspasos Pendientes en esta fecha",
+        noMatch: "No se encontraron traspasos Completados en esta fecha",
         toolTip: "Ordenar",
         columnHeaderTooltip: column => `Ordenar por ${column.label}`
       },
@@ -192,11 +194,18 @@ const TbTraspaso2 = ({ fecha }) => {
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={createTheme()}>
-        <MUIDataTable
-          data={data}
-          columns={columns}
-          options={options}
-        />
+        {loading ? ( // Si loading es true, muestra el skeleton
+          <Box sx={{ width: '100%', overflow: 'hidden' }}>
+            <Skeleton animation="wave" height={400} />
+          </Box>
+        ) : ( // Si loading es false, muestra la tabla
+          <MUIDataTable
+            data={data}
+            columns={columns}
+            options={options}
+          />
+        )}
+
         <Modal
           open={open}
           onClose={handleCloseModal}
@@ -224,9 +233,20 @@ const TbTraspaso2 = ({ fecha }) => {
               src={"https://tse4.mm.bing.net/th?id=OIP.SBwa67f-YE7Hc6JRd9phMgHaEK&pid=Api&P=0&h=180"}
               alt="titulo"
               loading="lazy"
+              style={{ maxWidth: '100%', height: 'auto' }}
             />
-
-
+            
+            {/* Agregar aquí la lógica para mostrar el contenido adicional del modal según sea necesario */}
+            
+            <Button
+              variant="contained"
+              onClick={handleRegister}
+              sx={{ mt: 2, float: 'right', bgcolor: '#4CAF50', '&:hover': { bgcolor: '#388E3C' } }}
+              className="mt-5"
+            >
+              Registrar
+              <InsertPhotoIcon sx={{ ml: 1 }} />
+            </Button>
           </Box>
         </Modal>
       </ThemeProvider>
