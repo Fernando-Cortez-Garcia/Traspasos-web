@@ -30,7 +30,63 @@ const fetchTraspasos = async (fecha) => {
     }
 
     const filteredData = parsedResult.filter(item => item.XSOLICITA === "");
-    return filteredData;
+    const modifiedData = filteredData.map(item => {
+      if (item.ESTADO === 'C') {
+        return { ...item, ESTADO: 'Cancelado' };
+      }
+      if (item.ESTADO === 'I') {
+        return { ...item, ESTADO: 'Impreso' };
+      }
+      return item;
+    });
+    return modifiedData;
+  } catch (error) {
+    console.error('Error en fetchTraspasos:', error.message);
+    throw error; // Re-lanzar el error para manejarlo en el componente que llame a fetchTraspasos
+  }
+};
+
+const fetchTraspasosCheck= async (fecha) => {
+  try {
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", "Bearer YOUR_TOKEN_HERE");
+
+    const formdata = new FormData();
+    formdata.append("opcion", "46");
+    formdata.append("fecha", fecha);
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: formdata,
+      redirect: "follow",
+    };
+
+    const response = await fetch(apiUrl, requestOptions);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const result = await response.text();
+
+    let parsedResult;
+    try {
+      parsedResult = JSON.parse(result);
+    } catch (e) {
+      throw new Error(`JSON parse error: ${e.message}`);
+    }
+
+    const filteredData = parsedResult.filter(item => item.XSOLICITA != "");
+    const modifiedData = filteredData.map(item => {
+      if (item.ESTADO === 'C') {
+        return { ...item, ESTADO: 'Cancelado' };
+      }
+      if (item.ESTADO === 'I') {
+        return { ...item, ESTADO: 'Impreso' };
+      }
+      return item;
+    });
+
+    return modifiedData;
   } catch (error) {
     console.error('Error en fetchTraspasos:', error.message);
     throw error; // Re-lanzar el error para manejarlo en el componente que llame a fetchTraspasos
@@ -99,4 +155,4 @@ const uploadPhoto = async (docId, file) => {
   }
 };
 
-export { fetchTraspasos, registerEvidence, uploadPhoto };
+export { fetchTraspasos, registerEvidence, uploadPhoto,fetchTraspasosCheck };
