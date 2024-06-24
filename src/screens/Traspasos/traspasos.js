@@ -4,6 +4,7 @@ import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import TbTraspaso from '../../componentes/tablas/traspasostable';
 import TbTraspasos2 from '../../componentes/tablas/traspasoscheck';
+import  ResponsiveAppBar from '../../componentes/top-bar/topbar';
 import PropTypes from 'prop-types';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -74,7 +75,8 @@ const Traspasos = () => {
     <ThemeProvider theme={defaultTheme}>
       <Container component="main" maxWidth="xl">
         <CssBaseline />
-        <h1 style={{ textAlign: 'center' }}>Traspasos Hidalgo</h1>
+        <ResponsiveAppBar className="mb-4"/>
+        
         <Grid container justifyContent="center" className="mt-2 mb-4">
           <Grid item xs={12} sm={6} md={4}>
             <TextField
