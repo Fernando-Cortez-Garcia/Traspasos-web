@@ -6,7 +6,7 @@ import MUIDataTable from "mui-datatables";
 import { Lightbox } from "react-modal-image";
 
 // Componentes de Material-UI
-import { LoadingButton } from '@mui/lab';
+import { LoadingButton } from "@mui/lab";
 import {
   Button,
   Modal,
@@ -39,6 +39,7 @@ import {
 
 //Enviroment variable
 const IMAGES_URL = process.env.REACT_APP_URL_IMAGES_TRASPASOS;
+const IMAGES_NO_AVAILABLE = process.env.REACT_APP_URL_IMAGE_NO_AVAILABLE;
 
 const TbTraspaso2 = ({ fecha }) => {
   //Tema
@@ -129,7 +130,7 @@ const TbTraspaso2 = ({ fecha }) => {
         ...prevState,
         [iddoc]: true,
       }));
-          //fotos
+      //fotos
       const photos = await fetchFotosTraspasos(iddoc);
       setPhotoData(photos);
       //tabla detalles
@@ -225,8 +226,8 @@ const TbTraspaso2 = ({ fecha }) => {
       options: {
         customBodyRender: (value, tableMeta, updateValue) => (
           <LoadingButton
-          loading={loadingDetails[tableMeta.rowData[0]]} // Accede usando la clave dinámica
-          variant="contained"
+            loading={loadingDetails[tableMeta.rowData[0]]} // Accede usando la clave dinámica
+            variant="contained"
             component="label"
             onClick={() => handleOpenModal(tableMeta.rowData[0])} // Passing DOCID as iddoc
           >
@@ -456,40 +457,50 @@ const TbTraspaso2 = ({ fecha }) => {
               ))}
             </SwipeableViews>
 
-            <MobileStepper
-              variant="dots"
-              steps={maxSteps}
-              position="static"
-              activeStep={activeStep}
-              nextButton={
-                <Button
-                  size="small"
-                  onClick={handleNext}
-                  disabled={activeStep === maxSteps - 1}
-                >
-                  Siguiente
-                  {theme.direction === "rtl" ? (
-                    <KeyboardArrowLeft />
-                  ) : (
-                    <KeyboardArrowRight />
-                  )}
-                </Button>
-              }
-              backButton={
-                <Button
-                  size="small"
-                  onClick={handleBack}
-                  disabled={activeStep === 0}
-                >
-                  {theme.direction === "rtl" ? (
-                    <KeyboardArrowRight />
-                  ) : (
-                    <KeyboardArrowLeft />
-                  )}
-                  Previo
-                </Button>
-              }
-            />
+            {maxSteps !== 0 ? (
+              <MobileStepper
+                variant="dots"
+                steps={maxSteps}
+                position="static"
+                activeStep={activeStep}
+                nextButton={
+                  <Button
+                    size="small"
+                    onClick={handleNext}
+                    disabled={activeStep === maxSteps - 1}
+                  >
+                    Siguiente
+                    {theme.direction === "rtl" ? (
+                      <KeyboardArrowLeft />
+                    ) : (
+                      <KeyboardArrowRight />
+                    )}
+                  </Button>
+                }
+                backButton={
+                  <Button
+                    size="small"
+                    onClick={handleBack}
+                    disabled={activeStep === 0}
+                  >
+                    {theme.direction === "rtl" ? (
+                      <KeyboardArrowRight />
+                    ) : (
+                      <KeyboardArrowLeft />
+                    )}
+                    Previo
+                  </Button>
+                }
+              />
+            ) : (
+              <div className="row text-center justify-content-center">
+                <img
+                  src={IMAGES_NO_AVAILABLE}
+                  alt="Imagen no disponible"
+                  style={{ maxWidth: "200px" }}
+                />
+              </div>
+            )}
 
             <Box mt={2}>
               <Typography variant="h6" className="mt-4 mb-3" align="center">
@@ -509,7 +520,7 @@ const TbTraspaso2 = ({ fecha }) => {
 
         {/* Se coloca el zoom de la imagen seleccionada en el modal fuera del modal para
         mostrar la imagen segun el vw y el vh de la pantalla del cliente */}
-        
+
         {openImage && (
           <Lightbox
             medium={currentImage}
