@@ -1,94 +1,132 @@
 import React, { useEffect, useState } from "react";
 import MUIDataTable from "mui-datatables";
-import { Button, Modal, Box, Typography, TextField } from "@mui/material";
-import { createTheme, StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
-import EditNoteIcon from '@mui/icons-material/EditNote';
-import DoneAllIcon from '@mui/icons-material/DoneAll';
+import {
+  Button,
+  Modal,
+  Box,
+  Typography,
+  TextField,
+  CircularProgress,
+  Skeleton,
+} from "@mui/material";
+import {
+  createTheme,
+  StyledEngineProvider,
+  ThemeProvider,
+} from "@mui/material/styles";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import {
+  fetchTraspasos,
+  registerEvidence,
+  uploadPhoto,
+} from "../../api/peticiones";
+import "react-toastify/dist/ReactToastify.css";
+import toastr from "toastr";
 
-import 'react-toastify/dist/ReactToastify.css';
-
-const apiUrl = process.env.REACT_APP_URL_PETICIONES;
-
-const handleFileUpload = (event, rowIndex, updateValue) => {
-  const file = event.target.files[0];
-  if (file) {
-    console.log(`File uploaded in row ${rowIndex}:`, file);
-    updateValue(file.name); // Update the cell value if necessary
-  }
-};
-
-export default function TbTraspaso({ fecha }) {
+const TbTraspaso = ({ fecha }) => {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true); // Estado para controlar la carga de datos
   const [open, setOpen] = useState(false);
   const [rowIndex, setRowIndex] = useState(null);
   const [updateValue, setUpdateValue] = useState(null);
-  const [fileName, setFileName] = useState('');
-  const [name, setName] = useState('');
-  const [iddoc, setIddoc] = useState('');
+  const [fileName, setFileName] = useState("");
+  const [name, setName] = useState("");
+  const [iddoc, setIddoc] = useState("");
   const [file, setFile] = useState(null);
-
+  const [isLoading, setIsLoading] = useState(false); // Estado para el btn
 
   const handleOpen = (index, update, iddoc) => {
     setRowIndex(index);
     setUpdateValue(() => update);
-    setIddoc(iddoc); // Set iddoc to display in the modal
+    setIddoc(iddoc);
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
-    setIddoc(''); // Reset iddoc when closing the modal
+    setIddoc(""); 
+    setFileName("");
+    setName("");
   };
 
-  // const handleRegister = () => {
-  //   // Aquí puedes manejar el registro de la información
-  //   console.log(`Registrando archivo: ${fileName} con nombre: ${name} en la fila: ${rowIndex} y iddoc: ${iddoc}`);
-  //   // Actualiza la celda o realiza cualquier otra acción necesaria
-  //   if (updateValue) {
-  //     updateValue({ fileName, name });
-  //   }
-  //   handleClose();
-  // };
+  const handleFileChange = (event) => {
+    const selectedFile = event.target.files[0];
+    setFile(selectedFile);
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDataAndSetData = async () => {
       try {
-        const myHeaders = new Headers();
-        myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJGZXJuYW5kbyIsIm5hbWUiOiJmZXIxMiIsImV4cCI6MTcxNjM5NjYyMCwiaWF0IjoxNzE2Mzk2NDQwfQ.XePwxaH6oBy0zwYCqiocdIhGSTLUEf-6XEPJWB-s5sA");
-
-        const formdata = new FormData();
-        formdata.append("opcion", "46");
-        formdata.append("fecha", fecha);
-
-        const requestOptions = {
-          method: "POST",
-          headers: myHeaders,
-          body: formdata,
-          redirect: "follow",
-        };
-
-        const response = await fetch(apiUrl, requestOptions);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const result = await response.text();
-
-        let parsedResult;
-        try {
-          parsedResult = JSON.parse(result);
-        } catch (e) {
-          throw new Error(`JSON parse error: ${e.message}`);
-        }
-
-        const filteredData = parsedResult.filter(item => item.XSOLICITA === "");
+        const filteredData = await fetchTraspasos(fecha);
         setData(filteredData);
+        setLoading(false); // Una vez cargados los datos, establece loading a false
       } catch (error) {
-        console.error('Error:', error.message);
+        console.error("Error en fetchDataAndSetData:", error.message);
       }
     };
 
-    fetchData();
+    fetchDataAndSetData();
   }, [fecha]);
+
+  const handleRegister = async () => {
+    if (name.trim() === "") {
+      toastr.info("El nombre está vacío");
+      return;
+    }
+    if (file === null) {
+      toastr.info("No se ha seleccionado ningún archivo");
+      return;
+    }
+
+    setIsLoading(true); 
+
+    try {
+      const registerResult = await registerEvidence(name, iddoc, file);
+
+      if (
+        registerResult.status === "exitoso" ||
+        registerResult.status === "success"
+      ) {
+        await uploadPhotoAndRefreshTable(iddoc, file);
+        toastr.success("Evidencia registrada exitosamente");
+      } else {
+        toastr.error("Error al registrar la evidencia");
+      }
+    } catch (error) {
+      console.error("Error en handleRegister:", error.message);
+      toastr.error("Error al registrar la evidencia");
+    } finally {
+      setIsLoading(false); 
+      handleClose(); 
+    }
+  };
+
+  const uploadPhotoAndRefreshTable = async (docId, selectedFile) => {
+    try {
+      const photoUploadResult = await uploadPhoto(docId, selectedFile);
+      if (
+        photoUploadResult.status === "exitoso" ||
+        photoUploadResult.status === "success"
+      ) {
+        await refreshTable(); // Actualiza la tabla después de subir la foto
+      } else {
+        toastr.error("Error al subir la foto");
+      }
+    } catch (error) {
+      console.error("Error en uploadPhotoAndRefreshTable:", error.message);
+      toastr.error("Error al subir la foto");
+    }
+  };
+
+  const refreshTable = async () => {
+    try {
+      const filteredData = await fetchTraspasos(fecha);
+      setData(filteredData);
+    } catch (error) {
+      console.error("Error en refreshTable:", error.message);
+    }
+  };
 
   const columns = [
     {
@@ -96,48 +134,48 @@ export default function TbTraspaso({ fecha }) {
       label: "Iddoc",
       options: {
         filter: true,
-        sort: true
-      }
+        sort: true,
+      },
     },
     {
       name: "NOMBRE",
       label: "Emisor",
       options: {
         filter: true,
-        sort: false
-      }
+        sort: false,
+      },
     },
     {
       name: "NUMERO",
       label: "N.Traspaso",
       options: {
         filter: true,
-        sort: false
-      }
+        sort: false,
+      },
     },
     {
       name: "NOTA",
       label: "Nota",
       options: {
         filter: true,
-        sort: false
-      }
+        sort: false,
+      },
     },
     {
       name: "XSOLICITA",
       label: "Solicita",
       options: {
         filter: true,
-        sort: false
-      }
+        sort: false,
+      },
     },
     {
       name: "ESTADO",
       label: "Estado",
       options: {
         filter: true,
-        sort: false
-      }
+        sort: false,
+      },
     },
     {
       name: "Evidencia",
@@ -146,13 +184,23 @@ export default function TbTraspaso({ fecha }) {
         customBodyRender: (value, tableMeta, updateValue) => {
           return (
             <div>
-              <Button variant="contained" component="label" onClick={() => handleOpen(tableMeta.rowIndex, updateValue, tableMeta.rowData[0])}>
+              <Button
+                variant="contained"
+                component="label"
+                onClick={() =>
+                  handleOpen(
+                    tableMeta.rowIndex,
+                    updateValue,
+                    tableMeta.rowData[0]
+                  )
+                }
+              >
                 <EditNoteIcon />
               </Button>
             </div>
           );
-        }
-      }
+        },
+      },
     },
   ];
 
@@ -161,12 +209,12 @@ export default function TbTraspaso({ fecha }) {
     print: false,
     download: false,
     viewColumns: false,
-    selectableRows: 'none',
+    selectableRows: "none",
     textLabels: {
       body: {
         noMatch: "No se encontraron traspasos Pendientes en esta fecha",
         toolTip: "Ordenar",
-        columnHeaderTooltip: column => `Ordenar por ${column.label}`
+        columnHeaderTooltip: (column) => `Ordenar por ${column.label}`,
       },
       pagination: {
         next: "Siguiente Página",
@@ -198,48 +246,17 @@ export default function TbTraspaso({ fecha }) {
     },
   };
 
-  const handleRegister = () => {
-
-    // Validate inputs
-    if (name.trim() === '') {
-      alert("vacio")
-      return;
-    }
-    if (file === null) {
-     
-      return;
-    }
-
-    
-    const formData = new FormData();
-    formData.append('opcion', name);
-    formData.append('nombreArchivo', name);
-    formData.append('archivo', file);
-    fetch('tu-url-de-api', {
-      method: 'POST',
-      body: formData,
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Registro exitoso:', data);
-        handleClose();
-      })
-      .catch(error => {
-        // Handle error
-        console.error('Error al registrar:', error);
-        // Optionally display an error message
-        alert('Hubo un error al intentar registrar la evidencia.');
-      });
-  };
-
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={createTheme()}>
-        <MUIDataTable
-          data={data}
-          columns={columns}
-          options={options}
-        />
+        {loading ? ( 
+          <Box sx={{ width: "100%", overflow: "hidden" }}>
+            <Skeleton animation="wave" height={400} />
+          </Box>
+        ) : (
+          <MUIDataTable data={data} columns={columns} options={options} />
+        )}
+
         <Modal
           open={open}
           onClose={handleClose}
@@ -248,13 +265,13 @@ export default function TbTraspaso({ fecha }) {
         >
           <Box
             sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
               width: 400,
-              bgcolor: 'background.paper',
-              border: '2px solid #000',
+              bgcolor: "background.paper",
+              border: "2px solid #000",
               boxShadow: 24,
               p: 4,
             }}
@@ -274,19 +291,34 @@ export default function TbTraspaso({ fecha }) {
             <input
               type="file"
               className="form form-control"
+              onChange={handleFileChange}
             />
             <Button
               variant="contained"
               onClick={handleRegister}
-              sx={{ mt: 2, float: 'right', bgcolor: '#4CAF50', '&:hover': { bgcolor: '#388E3C' } }}
+              sx={{
+                mt: 2,
+                float: "right",
+                bgcolor: "#4CAF50",
+                "&:hover": { bgcolor: "#388E3C" },
+              }}
               className="mt-5"
+              disabled={isLoading} // Deshabilita el botón cuando está cargando
             >
-              Registrar
-              <DoneAllIcon sx={{ ml: 1 }} />
+              {isLoading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                <>
+                  Registrar
+                  <AutorenewIcon sx={{ ml: 1 }} />
+                </>
+              )}
             </Button>
           </Box>
         </Modal>
       </ThemeProvider>
     </StyledEngineProvider>
   );
-}
+};
+
+export default TbTraspaso;

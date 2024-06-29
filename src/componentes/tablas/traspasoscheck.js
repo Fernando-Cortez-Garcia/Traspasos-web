@@ -1,48 +1,25 @@
 import React, { useEffect, useState } from "react";
 import MUIDataTable from "mui-datatables";
-import { Button, Modal, Box, Typography, TextField } from "@mui/material";
+import { Button, Modal, Box, Typography, Skeleton, TextField } from "@mui/material";
 import { createTheme, StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import InsertPhotoIcon from '@mui/icons-material/InsertPhoto';
 
-const apiUrl = process.env.REACT_APP_URL_PETICIONES;
+import { fetchTraspasosCheck, registerEvidence, uploadPhoto } from "../../api/peticiones"; // Importamos las funciones desde api.js
 
 const TbTraspaso2 = ({ fecha }) => {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [iddoc, setIddoc] = useState(null);
+  const [name, setName] = useState('');
+  const [file, setFile] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const myHeaders = new Headers();
-        myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJGZXJuYW5kbyIsIm5hbWUiOiJmZXIxMiIsImV4cCI6MTcxNjM5NjYyMCwiaWF0IjoxNzE2Mzk2NDQwfQ.XePwxaH6oBy0zwYCqiocdIhGSTLUEf-6XEPJWB-s5sA");
-
-        const formdata = new FormData();
-        formdata.append("opcion", "46");
-        formdata.append("fecha", fecha);
-
-        const requestOptions = {
-          method: "POST",
-          headers: myHeaders,
-          body: formdata,
-          redirect: "follow",
-        };
-
-        const response = await fetch(apiUrl, requestOptions);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const result = await response.text();
-
-        let parsedResult;
-        try {
-          parsedResult = JSON.parse(result);
-        } catch (e) {
-          throw new Error(`JSON parse error: ${e.message}`);
-        }
-
-        const filteredData = parsedResult.filter(item => item.XSOLICITA !== "");
+        const filteredData = await fetchTraspasosCheck(fecha);
         setData(filteredData);
+        setLoading(false);
       } catch (error) {
         console.error('Error:', error.message);
       }
@@ -51,11 +28,10 @@ const TbTraspaso2 = ({ fecha }) => {
     fetchData();
   }, [fecha]);
 
-  const handleFileUpload = (event, rowIndex, updateValue) => {
+  const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      console.log(`File uploaded in row ${rowIndex}:`, file);
-      updateValue(file.name); // Update the cell value if necessary
+      setFile(file);
     }
   };
 
@@ -68,9 +44,32 @@ const TbTraspaso2 = ({ fecha }) => {
     setOpen(false);
   };
 
-  const handleRegister = () => {
-    // Handle register logic here
-    handleCloseModal();
+  const handleRegister = async () => {
+    try {
+      await registerEvidence(name, iddoc, file);
+      const photoResult = await uploadPhoto(iddoc, file);
+
+      if (photoResult.status === 'exitoso' || photoResult.status === 'success') {
+        alert('Registro y subida de foto exitosos.');
+        await refreshTable();
+      } else {
+        alert('Hubo un error al intentar subir la foto.');
+      }
+
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error en handleRegister:', error.message);
+      alert('Hubo un error al intentar registrar la evidencia.');
+    }
+  };
+
+  const refreshTable = async () => {
+    try {
+      const filteredData = await fetchTraspasosCheck(fecha);
+      setData(filteredData);
+    } catch (error) {
+      console.error('Error en refreshTable:', error.message);
+    }
   };
 
   const columns = [
@@ -153,9 +152,16 @@ const TbTraspaso2 = ({ fecha }) => {
     download: false,
     viewColumns: false,
     selectableRows: 'none',
+    setRowProps: (row, dataIndex, rowIndex) => {
+      return {
+        style: {
+          backgroundColor: row[6] === 'Cancelado' ? '#FFCDD2' : 'inherit' // Cambia el índice según la posición de la columna "ESTADO"
+        }
+      };
+    },
     textLabels: {
       body: {
-        noMatch: "No se encontraron traspasos Pendientes en esta fecha",
+        noMatch: "No se encontraron traspasos Completados en esta fecha",
         toolTip: "Ordenar",
         columnHeaderTooltip: column => `Ordenar por ${column.label}`
       },
@@ -192,11 +198,18 @@ const TbTraspaso2 = ({ fecha }) => {
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={createTheme()}>
-        <MUIDataTable
-          data={data}
-          columns={columns}
-          options={options}
-        />
+        {loading ? (
+          <Box sx={{ width: '100%', overflow: 'hidden' }}>
+            <Skeleton animation="wave" height={400} />
+          </Box>
+        ) : (
+          <MUIDataTable
+            data={data}
+            columns={columns}
+            options={options}
+          />
+        )}
+
         <Modal
           open={open}
           onClose={handleCloseModal}
@@ -224,9 +237,46 @@ const TbTraspaso2 = ({ fecha }) => {
               src={"https://tse4.mm.bing.net/th?id=OIP.SBwa67f-YE7Hc6JRd9phMgHaEK&pid=Api&P=0&h=180"}
               alt="titulo"
               loading="lazy"
+              style={{ maxWidth: '100%', height: 'auto' }}
             />
+            
+            <Box mt={2}>
+              <Typography variant="body1">Nombre:</Typography>
+              <TextField
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                variant="outlined"
+                fullWidth
+                size="small"
+              />
+            </Box>
 
+            <Box mt={2}>
+              <Typography variant="body1">Subir Foto:</Typography>
+              <input
+                accept="image/*"
+                id="contained-button-file"
+                type="file"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+              <label htmlFor="contained-button-file">
+                <Button variant="contained" component="span">
+                  Subir
+                  <InsertPhotoIcon sx={{ ml: 1 }} />
+                </Button>
+              </label>
+              {file && <Typography variant="body2">{file.name}</Typography>}
+            </Box>
 
+            <Button
+              variant="contained"
+              onClick={handleRegister}
+              sx={{ mt: 2, float: 'right', bgcolor: '#4CAF50', '&:hover': { bgcolor: '#388E3C' } }}
+            >
+              Registrar
+              <InsertPhotoIcon sx={{ ml: 1 }} />
+            </Button>
           </Box>
         </Modal>
       </ThemeProvider>
