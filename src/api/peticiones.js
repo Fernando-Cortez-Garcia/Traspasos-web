@@ -46,6 +46,73 @@ const fetchTraspasos = async (fecha) => {
   }
 };
 
+const fetchDetallesTraspasos = async (docid) => {
+  try {
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", "Bearer YOUR_TOKEN_HERE");
+
+    const formdata = new FormData();
+    formdata.append("opcion", "50");
+    formdata.append("docid", docid);
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: formdata,
+      redirect: "follow",
+    };
+
+    const response = await fetch(apiUrl, requestOptions);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const result = await response.text();
+    let parsedResult;
+    try {
+      return parsedResult = JSON.parse(result);
+    } catch (e) {
+      throw new Error(`JSON parse error: ${e.message}`);
+    }
+  } catch (error) {
+    console.error('Error en fetchTraspasos:', error.message);
+    throw error; // Re-lanzar el error para manejarlo en el componente que llame a fetchTraspasos
+  }
+};
+
+const fetchFotosTraspasos = async (docid) => {
+  try {
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", "Bearer YOUR_TOKEN_HERE");
+
+    const formdata = new FormData();
+    formdata.append("opcion", "49");
+    formdata.append("docid", docid);
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: formdata,
+      redirect: "follow",
+    };
+
+    const response = await fetch(apiUrl, requestOptions);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const result = await response.text();
+
+    let parsedResult;
+    try {
+      return parsedResult = JSON.parse(result);
+    } catch (e) {
+      throw new Error(`JSON parse error: ${e.message}`);
+    }
+  } catch (error) {
+    console.error('Error en fetchTraspasos:', error.message);
+    throw error; // Re-lanzar el error para manejarlo en el componente que llame a fetchTraspasos
+  }
+};
+
 const fetchTraspasosCheck= async (fecha) => {
   try {
     const myHeaders = new Headers();
@@ -155,4 +222,4 @@ const uploadPhoto = async (docId, file) => {
   }
 };
 
-export { fetchTraspasos, registerEvidence, uploadPhoto,fetchTraspasosCheck };
+export { fetchTraspasos, registerEvidence, uploadPhoto,fetchTraspasosCheck, fetchDetallesTraspasos, fetchFotosTraspasos };
