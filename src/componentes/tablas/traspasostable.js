@@ -15,7 +15,7 @@ import {
   ThemeProvider,
 } from "@mui/material/styles";
 import EditNoteIcon from "@mui/icons-material/EditNote";
-import AutorenewIcon from '@mui/icons-material/Autorenew';
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 import {
   fetchTraspasos,
   registerEvidence,
@@ -45,7 +45,7 @@ const TbTraspaso = ({ fecha }) => {
 
   const handleClose = () => {
     setOpen(false);
-    setIddoc(""); 
+    setIddoc("");
     setFileName("");
     setName("");
   };
@@ -79,7 +79,7 @@ const TbTraspaso = ({ fecha }) => {
       return;
     }
 
-    setIsLoading(true); 
+    setIsLoading(true);
 
     try {
       const registerResult = await registerEvidence(name, iddoc, file);
@@ -97,14 +97,18 @@ const TbTraspaso = ({ fecha }) => {
       console.error("Error en handleRegister:", error.message);
       toastr.error("Error al registrar la evidencia");
     } finally {
-      setIsLoading(false); 
-      handleClose(); 
+      setIsLoading(false);
+      handleClose();
     }
   };
 
   const uploadPhotoAndRefreshTable = async (docId, selectedFile) => {
     try {
-      const photoUploadResult = await uploadPhoto(docId, selectedFile);
+      //Se comprime la imagen
+      const compressedImage = await compressImage(selectedFile, 60);
+
+      //Se envia la imagen comprimida
+      const photoUploadResult = await uploadPhoto(docId, compressedImage);
       if (
         photoUploadResult.status === "exitoso" ||
         photoUploadResult.status === "success"
@@ -117,6 +121,30 @@ const TbTraspaso = ({ fecha }) => {
       console.error("Error en uploadPhotoAndRefreshTable:", error.message);
       toastr.error("Error al subir la foto");
     }
+  };
+
+  const compressImage = (imagenComoArchivo, porcentajeCalidad) => {
+    return new Promise((resolve, reject) => {
+      const $canvas = document.createElement("canvas");
+      const imagen = new Image();
+      imagen.onload = () => {
+        $canvas.width = imagen.width;
+        $canvas.height = imagen.height;
+        $canvas.getContext("2d").drawImage(imagen, 0, 0);
+        $canvas.toBlob(
+          (blob) => {
+            if (blob === null) {
+              return reject(blob);
+            } else {
+              resolve(blob);
+            }
+          },
+          "image/jpeg",
+          porcentajeCalidad / 100
+        );
+      };
+      imagen.src = URL.createObjectURL(imagenComoArchivo);
+    });
   };
 
   const refreshTable = async () => {
@@ -249,7 +277,7 @@ const TbTraspaso = ({ fecha }) => {
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={createTheme()}>
-        {loading ? ( 
+        {loading ? (
           <Box sx={{ width: "100%", overflow: "hidden" }}>
             <Skeleton animation="wave" height={400} />
           </Box>
