@@ -1,18 +1,17 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import SignIn from './screens/auth/login';
-import Traspasos from './screens/Traspasos/traspasos'
+import React, { Suspense } from 'react';
+import { RouterProvider } from 'react-router-dom';
+import router from './router/AppRouter.js'; // Importa el router configurado
 
 
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<SignIn />} />
-        <Route path="/traspasos" element={<Traspasos />} />
-      </Routes>
-    </Router>
+    //Suspense permite manejar la carga diferida de componentes, aquí se puede mostrar
+    //algo como un splash component para indicar que la app se encuentra cargando
+    <Suspense fallback={<div>Loading...</div>}>
+      {/* Se instancia el router con la lógica de login hecha */}
+      <RouterProvider router={router} />
+    </Suspense>
   );
 }
 
