@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -11,52 +11,41 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import "./estilos.css";
+import { fetchLogin } from "../../api/peticiones"; // Importamos las funciones desde api.js
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
-function Copyright(props) {
-  return (
-    <Typography variant="body2" color="text.secondary" align="center" {...props}>
-      {'Copyright © '}
-      <Link color="inherit" href="http://hidalgo.no-ip.info:5610/soporteBitala/index.html">
-        Bitala Mx 
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
 
 const defaultTheme = createTheme();
 
 export default function SignIn() {
+  //Declaración de variables
   const navigate = useNavigate();  // Hook para redireccionar
+  const [showPassword, setShowPassword] = useState(false);
 
+  //Funciones
   const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const userData = {
-      email: data.get('email'),
-      password: data.get('password'),
-    };
+    const user = data.get('email');
+    const password = data.get('password');
 
     try {
       // Aquí haces la llamada a la API para validar el usuario
-      const response = await fetch('URL_DE_TU_API', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
+      const response = await fetchLogin(user, password);
 
-      if (response.ok) {
-        // Si la validación es exitosa, redirige a otra vista
-        navigate('traspasos');
-      } else {
-        // Maneja los errores de validación aquí
-        console.log('Error en la validación');
-      }
+      const userData = {
+        nombre: response.Nombre,
+        tipo: response.Tipo
+      };
+
+      localStorage.setItem("user", JSON.stringify(userData));
+      console.log(userData);
+      navigate('traspasos');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error:', error.message);
     }
   };
 
@@ -92,16 +81,8 @@ export default function SignIn() {
               autoComplete="email"
               autoFocus
             />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Contraseña"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-            />
+
+            {PasswordField()}
             
             <Button
               type="submit"
@@ -121,3 +102,58 @@ export default function SignIn() {
     </body>
   );
 }
+
+//Componentes
+function PasswordField() {
+  
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
+  return (
+    <TextField
+      margin="normal"
+      required
+      fullWidth
+      name="password"
+      label="Contraseña"
+      type={showPassword ? 'text' : 'password'}
+      id="password"
+      autoComplete="current-password"
+      InputProps={{
+        endAdornment: (
+          <InputAdornment position="end">
+            <IconButton
+              aria-label="toggle password visibility"
+              onClick={handleClickShowPassword}
+              onMouseDown={handleMouseDownPassword}
+              edge="end"
+            >
+              {showPassword ? <VisibilityOff /> : <Visibility />}
+            </IconButton>
+          </InputAdornment>
+        ),
+      }}
+    />
+  );
+}
+
+function Copyright(props) {
+  return (
+    <Typography variant="body2" color="text.secondary" align="center" {...props}>
+      {'Copyright © '}
+      <Link color="inherit" href="http://hidalgo.no-ip.info:5610/soporteBitala/index.html">
+        Bitala Mx 
+      </Link>{' '}
+      {new Date().getFullYear()}
+      {'.'}
+    </Typography>
+  );
+}
+

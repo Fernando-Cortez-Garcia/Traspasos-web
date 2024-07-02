@@ -1,5 +1,40 @@
 const apiUrl = process.env.REACT_APP_URL_PETICIONES;
 
+const fetchLogin = async (usuario, contra) => {
+  try {
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", "Bearer YOUR_TOKEN_HERE");
+
+    const formdata = new FormData();
+    formdata.append("opcion", "1.2");
+    formdata.append("usuario", usuario);
+    formdata.append("contra", contra);
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: formdata,
+      redirect: "follow",
+    };
+
+    const response = await fetch(apiUrl, requestOptions);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const result = await response.text();
+
+    let parsedResult;
+    try {
+      return parsedResult = JSON.parse(result)[0];
+    } catch (e) {
+      throw new Error(`JSON parse error: ${e.message}`);
+    }
+  } catch (error) {
+    console.error('Error en fetchTraspasos:', error.message);
+    throw error; // Re-lanzar el error para manejarlo en el componente que llame a fetchTraspasos
+  }
+};
+
 const fetchTraspasos = async (fecha) => {
   try {
     const myHeaders = new Headers();
@@ -142,7 +177,7 @@ const fetchTraspasosCheck= async (fecha) => {
       throw new Error(`JSON parse error: ${e.message}`);
     }
 
-    const filteredData = parsedResult.filter(item => item.XSOLICITA != "");
+    const filteredData = parsedResult.filter(item => item.XSOLICITA !== "");
     const modifiedData = filteredData.map(item => {
       if (item.ESTADO === 'C') {
         return { ...item, ESTADO: 'Cancelado' };
@@ -222,4 +257,4 @@ const uploadPhoto = async (docId, file) => {
   }
 };
 
-export { fetchTraspasos, registerEvidence, uploadPhoto,fetchTraspasosCheck, fetchDetallesTraspasos, fetchFotosTraspasos };
+export { fetchLogin, fetchTraspasos, registerEvidence, uploadPhoto,fetchTraspasosCheck, fetchDetallesTraspasos, fetchFotosTraspasos };
