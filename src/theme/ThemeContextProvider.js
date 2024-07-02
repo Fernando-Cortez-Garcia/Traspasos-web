@@ -1,31 +1,15 @@
+import React, { createContext, useContext } from "react";
 import { createTheme } from "@mui/material";
-import React, { createContext, useState, useMemo, useContext } from "react";
+import { useColorTheme } from "./use-color-theme";
 
-// Creamos el contexto con valores predeterminados
+const defaultTheme = createTheme();
+
 export const ThemeContext = createContext({
   mode: "light",
   toggleColorMode: () => {},
-  theme: createTheme(),
+  theme: defaultTheme,
 });
 
-// Custom hook para manejar el tema
-const useColorTheme = () => {
-  const [mode, setMode] = useState("light");
-
-  const toggleColorMode = () => {
-    setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
-  };
-
-  const theme = useMemo(() => createTheme({ palette: { mode } }), [mode]);
-
-  return {
-    mode,
-    toggleColorMode,
-    theme,
-  };
-};
-
-// Proveedor del contexto
 export const ThemeContextProvider = ({ children }) => {
   const value = useColorTheme();
   return (
@@ -33,7 +17,7 @@ export const ThemeContextProvider = ({ children }) => {
   );
 };
 
-// Custom hook para usar el contexto
 export const useThemeContext = () => {
+  console.log("hola")
   return useContext(ThemeContext);
 };
