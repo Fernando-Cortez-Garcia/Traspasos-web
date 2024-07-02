@@ -9,12 +9,14 @@ import Container from "@mui/material/Container";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { useNavigate } from "react-router-dom";
 
 const settings = ["Salir"];
 function ResponsiveAppBar() {
   //declaracion de variables
   const [name, setName] = React.useState("");
   const [anchorElUser, setAnchorElUser] = React.useState(null);
+  const navigate = useNavigate(); // Hook para redireccionar
 
   //funciones
   const handleOpenUserMenu = (event) => {
@@ -27,7 +29,7 @@ function ResponsiveAppBar() {
 
   const logOut = () => {
     localStorage.removeItem("user");
-    window.location.replace("/login");
+    navigate("login");
   };
 
   const toSentenceCase = (str) => {
