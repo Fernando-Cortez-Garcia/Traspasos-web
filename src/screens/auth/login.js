@@ -42,7 +42,6 @@ export default function SignIn() {
       };
 
       localStorage.setItem("user", JSON.stringify(userData));
-      console.log(userData);
       navigate('traspasos');
     } catch (error) {
       console.error('Error:', error.message);
