@@ -1,4 +1,6 @@
 import React, { useEffect } from "react";
+import { Button } from "@mui/material";
+import { ExitToApp } from "@mui/icons-material";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -10,6 +12,8 @@ import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useNavigate } from "react-router-dom";
+
+import NightModeToggle from "./NightModeToggle.tsx";
 
 const settings = ["Salir"];
 function ResponsiveAppBar() {
@@ -33,13 +37,10 @@ function ResponsiveAppBar() {
   };
 
   const toSentenceCase = (str) => {
-    return str.replace(
-      /\w\S*/g,
-      function (txt) {
-          return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-      }
-  );
-}
+    return str.replace(/\w\S*/g, function (txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+  };
 
   //init
   useEffect(() => {
@@ -119,11 +120,24 @@ function ResponsiveAppBar() {
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={logOut}>
-                  <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
-              ))}
+              {/* Botones de topbar */}
+              {/* Modo oscuro */}
+              <NightModeToggle />
+
+              {/* Cerrar sesión */}
+              <Button
+                onClick={logOut}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  bgcolor: "background.default",
+                  color: "text.primary",
+                  p: 2,
+                  width: "100%",
+                }}
+              > Salir <IconButton sx={{ ml: 1 }} color="inherit"> <ExitToApp /> </IconButton>
+              </Button>
             </Menu>
           </Box>
         </Toolbar>

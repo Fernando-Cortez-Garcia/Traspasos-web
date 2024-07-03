@@ -22,7 +22,7 @@ export default function BasicModal() {
   const handleClose = () => setOpen(false);
 
   return (
-    <div>
+    // <div>
       <Modal
         open={open}
         onClose={handleClose}
@@ -38,6 +38,6 @@ export default function BasicModal() {
           </Typography>
         </Box>
       </Modal>
-    </div>
+    // </div>
   );
 }

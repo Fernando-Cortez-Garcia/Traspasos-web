@@ -13,9 +13,11 @@ import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Grid';
 import 'bootstrap/dist/css/bootstrap.css';
 
-const defaultTheme = createTheme();
+import { useThemeContext } from "../../theme/ThemeContextProvider.tsx";
+
 
 function CustomTabPanel(props) {
+
   const { children, value, index, ...other } = props;
 
   return (
@@ -45,6 +47,8 @@ function a11yProps(index) {
 }
 
 const Traspasos = () => {
+  const { theme } = useThemeContext();
+
   const [value, setValue] = useState(0);
   const [fecha, setFecha] = useState('');
 
@@ -72,7 +76,7 @@ const Traspasos = () => {
   };
 
   return (
-    <ThemeProvider theme={defaultTheme}>
+    <ThemeProvider theme={theme}>
       <Container component="main" maxWidth="xl">
         <CssBaseline />
         <ResponsiveAppBar className="mb-4"/>

@@ -10,7 +10,6 @@ import {
   Skeleton,
 } from "@mui/material";
 import {
-  createTheme,
   StyledEngineProvider,
   ThemeProvider,
 } from "@mui/material/styles";
@@ -24,7 +23,11 @@ import {
 import "react-toastify/dist/ReactToastify.css";
 import toastr from "toastr";
 
+import { useThemeContext } from "../../theme/ThemeContextProvider.tsx";
+
 const TbTraspaso = ({ fecha }) => {
+  const { theme } = useThemeContext();
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true); // Estado para controlar la carga de datos
   const [open, setOpen] = useState(false);
@@ -276,7 +279,7 @@ const TbTraspaso = ({ fecha }) => {
 
   return (
     <StyledEngineProvider injectFirst>
-      <ThemeProvider theme={createTheme()}>
+      <ThemeProvider theme={theme}>
         {loading ? (
           <Box sx={{ width: "100%", overflow: "hidden" }}>
             <Skeleton animation="wave" height={400} />

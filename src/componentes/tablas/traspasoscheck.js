@@ -18,7 +18,6 @@ import {
   Paper,
 } from "@mui/material";
 import {
-  createTheme,
   StyledEngineProvider,
   ThemeProvider,
 } from "@mui/material/styles";
@@ -37,13 +36,15 @@ import {
   fetchFotosTraspasos,
 } from "../../api/peticiones"; // Importamos las funciones desde api.js
 
+import { useThemeContext } from "../../theme/ThemeContextProvider.tsx";
+
 //Enviroment variable
 const IMAGES_URL = process.env.REACT_APP_URL_IMAGES_TRASPASOS;
 const IMAGES_NO_AVAILABLE = process.env.REACT_APP_URL_IMAGE_NO_AVAILABLE;
 
 const TbTraspaso2 = ({ fecha }) => {
   //Tema
-  const theme = createTheme();
+  const { theme } = useThemeContext();
   //Variables mixtas
   const [detailsData, setDetailsData] = useState([]);
   const [data, setData] = useState([]);
