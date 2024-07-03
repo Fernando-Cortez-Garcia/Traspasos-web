@@ -84,6 +84,7 @@ const fetchTraspasos = async (fecha) => {
 
     const filteredData = parsedResult.filter((item) => item.XSOLICITA === "");
     const modifiedData = filteredData.map((item) => {
+      //C = Cancelado
       if (item.ESTADO === "C") {
         return { ...item, ESTADO: "Cancelado" };
       }
@@ -92,6 +93,8 @@ const fetchTraspasos = async (fecha) => {
       }
       return item;
     });
+
+    console.log(modifiedData)
     return modifiedData;
   } catch (error) {
     console.error("Error en fetchTraspasos:", error.message);

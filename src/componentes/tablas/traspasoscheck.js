@@ -17,10 +17,7 @@ import {
   MobileStepper,
   Paper,
 } from "@mui/material";
-import {
-  StyledEngineProvider,
-  ThemeProvider,
-} from "@mui/material/styles";
+import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import {
   AddAPhoto,
   KeyboardArrowLeft,
@@ -211,14 +208,37 @@ const TbTraspaso2 = ({ fecha }) => {
       options: {
         filter: true,
         sort: false,
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return <p>{tableMeta.rowData[5]} </p>;
+        },
       },
     },
+
     {
       name: "ESTADO",
       label: "Estado",
       options: {
         filter: true,
         sort: false,
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return (
+            <div>
+              <Box
+                sx={{
+                  width: 80,
+                  height: 20,
+                  borderRadius: 5,
+                  bgcolor: tableMeta.rowData[6] === "Impreso" ? "green" : "red",
+                }}
+                className="text-center"
+              >
+                <Typography variant="inherit" sx={{ color: "white" }}>
+                  {tableMeta.rowData[6]}
+                </Typography>
+              </Box>
+            </div>
+          );
+        },
       },
     },
     {

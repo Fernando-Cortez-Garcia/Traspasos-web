@@ -9,10 +9,7 @@ import {
   CircularProgress,
   Skeleton,
 } from "@mui/material";
-import {
-  StyledEngineProvider,
-  ThemeProvider,
-} from "@mui/material/styles";
+import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import {
@@ -198,6 +195,9 @@ const TbTraspaso = ({ fecha }) => {
       options: {
         filter: true,
         sort: false,
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return <p>{tableMeta.rowData[4]} </p>;
+        },
       },
     },
     {
@@ -206,6 +206,28 @@ const TbTraspaso = ({ fecha }) => {
       options: {
         filter: true,
         sort: false,
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return (
+            <div>
+              <Box
+                sx={{
+                  width: 80,
+                  height: 20,
+                  borderRadius: 5,
+                  bgcolor:
+                    tableMeta.rowData[5] === "Impreso"
+                      ? "green"
+                      : "red"
+                }}
+                className="text-center"
+              >
+                <Typography variant="inherit" sx={{color: "white"}}>
+                  {tableMeta.rowData[5]}
+                </Typography>
+              </Box>
+            </div>
+          );
+        },
       },
     },
     {
