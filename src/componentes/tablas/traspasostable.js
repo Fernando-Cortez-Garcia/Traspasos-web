@@ -214,14 +214,11 @@ const TbTraspaso = ({ fecha }) => {
                   width: 80,
                   height: 20,
                   borderRadius: 5,
-                  bgcolor:
-                    tableMeta.rowData[5] === "Impreso"
-                      ? "green"
-                      : "red"
+                  bgcolor: tableMeta.rowData[5] === "Impreso" ? "green" : "red",
                 }}
                 className="text-center"
               >
-                <Typography variant="inherit" sx={{color: "white"}}>
+                <Typography variant="inherit" sx={{ color: "white" }}>
                   {tableMeta.rowData[5]}
                 </Typography>
               </Box>
@@ -247,6 +244,7 @@ const TbTraspaso = ({ fecha }) => {
                     tableMeta.rowData[0]
                   )
                 }
+                disabled={tableMeta.rowData[5] === "Impreso" ? false : true}
               >
                 <EditNoteIcon />
               </Button>
@@ -263,6 +261,17 @@ const TbTraspaso = ({ fecha }) => {
     download: false,
     viewColumns: false,
     selectableRows: "none",
+    setRowProps: (row, dataIndex, rowIndex) => {
+      const rowData = row || [];
+      //Se obtiene el estado con los props y children, ya que esta dentro de varios componentes
+      const estado = rowData[5].props.children.props.children.props.children;
+      return {
+        style: {
+          backgroundColor: estado === "Cancelado" ? "red" : "inherit",
+          color: "white"
+        },
+      };
+    },
     textLabels: {
       body: {
         noMatch: "No se encontraron traspasos Pendientes en esta fecha",
@@ -298,7 +307,7 @@ const TbTraspaso = ({ fecha }) => {
       },
     },
   };
-
+  
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>

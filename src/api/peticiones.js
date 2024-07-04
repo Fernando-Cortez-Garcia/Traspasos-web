@@ -93,8 +93,6 @@ const fetchTraspasos = async (fecha) => {
       }
       return item;
     });
-
-    console.log(modifiedData)
     return modifiedData;
   } catch (error) {
     console.error("Error en fetchTraspasos:", error.message);

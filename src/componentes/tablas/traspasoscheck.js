@@ -265,6 +265,17 @@ const TbTraspaso2 = ({ fecha }) => {
     download: false,
     viewColumns: false,
     selectableRows: "none",
+    setRowProps: (row, dataIndex, rowIndex) => {
+      const rowData = row || [];
+      //Se obtiene el estado con los props y children, ya que esta dentro de varios componentes
+      const estado = rowData[6].props.children.props.children.props.children;
+      return {
+        style: {
+          backgroundColor: estado === "Cancelado" ? "red" : "inherit",
+          color: "white"
+        },
+      };
+    },
     textLabels: {
       body: {
         noMatch: "No se encontraron detalles.",
