@@ -108,7 +108,7 @@ export default function SignIn() {
               <LockOutlinedIcon />
             </Avatar>
             <Typography component="h1" variant="h5">
-              Traspaso Hidalgo
+              Traspasos Hidalgo
             </Typography>
             <Box
               component="form"
