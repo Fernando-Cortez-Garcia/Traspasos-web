@@ -267,7 +267,7 @@ const TbTraspaso = ({ fecha }) => {
       const estado = rowData[5].props.children.props.children.props.children;
       return {
         style: {
-          backgroundColor: estado === "Cancelado" ? "red" : "inherit",
+          backgroundColor: estado === "Cancelado" ? "#ff7676" : "inherit",
           color: "white"
         },
       };
