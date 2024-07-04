@@ -1,9 +1,9 @@
-import { createBrowserRouter, Navigate, redirect } from "react-router-dom";
+import { createHashRouter, Navigate, redirect } from "react-router-dom";
 import SignIn from "../screens/auth/login";
 import Traspasos from "../screens/Traspasos/traspasos";
 import ProtectedRoute from "./ProtectedRoute"; // Asegúrate de que la ruta es correcta
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: "/",
     element: <Navigate to="/login" replace />,

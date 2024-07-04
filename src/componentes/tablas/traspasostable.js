@@ -9,11 +9,7 @@ import {
   CircularProgress,
   Skeleton,
 } from "@mui/material";
-import {
-  createTheme,
-  StyledEngineProvider,
-  ThemeProvider,
-} from "@mui/material/styles";
+import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import {
@@ -24,7 +20,11 @@ import {
 import "react-toastify/dist/ReactToastify.css";
 import toastr from "toastr";
 
+import { useThemeContext } from "../../theme/ThemeContextProvider.tsx";
+
 const TbTraspaso = ({ fecha }) => {
+  const { theme } = useThemeContext();
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true); // Estado para controlar la carga de datos
   const [open, setOpen] = useState(false);
@@ -195,6 +195,9 @@ const TbTraspaso = ({ fecha }) => {
       options: {
         filter: true,
         sort: false,
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return <p>{tableMeta.rowData[4]} </p>;
+        },
       },
     },
     {
@@ -203,6 +206,25 @@ const TbTraspaso = ({ fecha }) => {
       options: {
         filter: true,
         sort: false,
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return (
+            <div>
+              <Box
+                sx={{
+                  width: 80,
+                  height: 20,
+                  borderRadius: 5,
+                  bgcolor: tableMeta.rowData[5] === "Impreso" ? "green" : "red",
+                }}
+                className="text-center"
+              >
+                <Typography variant="inherit" sx={{ color: "white" }}>
+                  {tableMeta.rowData[5]}
+                </Typography>
+              </Box>
+            </div>
+          );
+        },
       },
     },
     {
@@ -222,6 +244,7 @@ const TbTraspaso = ({ fecha }) => {
                     tableMeta.rowData[0]
                   )
                 }
+                disabled={tableMeta.rowData[5] === "Impreso" ? false : true}
               >
                 <EditNoteIcon />
               </Button>
@@ -238,6 +261,17 @@ const TbTraspaso = ({ fecha }) => {
     download: false,
     viewColumns: false,
     selectableRows: "none",
+    setRowProps: (row, dataIndex, rowIndex) => {
+      const rowData = row || [];
+      //Se obtiene el estado con los props y children, ya que esta dentro de varios componentes
+      const estado = rowData[5].props.children.props.children.props.children;
+      return {
+        style: {
+          backgroundColor: estado === "Cancelado" ? "red" : "inherit",
+          color: "white"
+        },
+      };
+    },
     textLabels: {
       body: {
         noMatch: "No se encontraron traspasos Pendientes en esta fecha",
@@ -273,10 +307,10 @@ const TbTraspaso = ({ fecha }) => {
       },
     },
   };
-
+  
   return (
     <StyledEngineProvider injectFirst>
-      <ThemeProvider theme={createTheme()}>
+      <ThemeProvider theme={theme}>
         {loading ? (
           <Box sx={{ width: "100%", overflow: "hidden" }}>
             <Skeleton animation="wave" height={400} />

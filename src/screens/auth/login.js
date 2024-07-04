@@ -24,8 +24,6 @@ import { LoadingButton } from "@mui/lab";
 import "./estilos.css";
 import { fetchLogin } from "../../api/peticiones"; // Importamos las funciones desde api.js
 
-const defaultTheme = createTheme();
-
 export default function SignIn() {
   //Declaración de variables
   const navigate = useNavigate(); // Hook para redireccionar
@@ -96,7 +94,6 @@ export default function SignIn() {
 
   return (
     <body>
-      <ThemeProvider theme={defaultTheme}>
         <Container id="contenedor" component="main" maxWidth="xs">
           <CssBaseline />
           <Box
@@ -111,7 +108,7 @@ export default function SignIn() {
               <LockOutlinedIcon />
             </Avatar>
             <Typography component="h1" variant="h5">
-              Traspaso Hidalgo
+              Traspasos Hidalgo
             </Typography>
             <Box
               component="form"
@@ -156,7 +153,6 @@ export default function SignIn() {
             { errorSnackbar }
           </Alert>
         </Snackbar>
-      </ThemeProvider>
     </body>
   );
 }

@@ -17,11 +17,7 @@ import {
   MobileStepper,
   Paper,
 } from "@mui/material";
-import {
-  createTheme,
-  StyledEngineProvider,
-  ThemeProvider,
-} from "@mui/material/styles";
+import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import {
   AddAPhoto,
   KeyboardArrowLeft,
@@ -37,13 +33,15 @@ import {
   fetchFotosTraspasos,
 } from "../../api/peticiones"; // Importamos las funciones desde api.js
 
+import { useThemeContext } from "../../theme/ThemeContextProvider.tsx";
+
 //Enviroment variable
 const IMAGES_URL = process.env.REACT_APP_URL_IMAGES_TRASPASOS;
 const IMAGES_NO_AVAILABLE = process.env.REACT_APP_URL_IMAGE_NO_AVAILABLE;
 
 const TbTraspaso2 = ({ fecha }) => {
   //Tema
-  const theme = createTheme();
+  const { theme } = useThemeContext();
   //Variables mixtas
   const [detailsData, setDetailsData] = useState([]);
   const [data, setData] = useState([]);
@@ -210,14 +208,37 @@ const TbTraspaso2 = ({ fecha }) => {
       options: {
         filter: true,
         sort: false,
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return <p>{tableMeta.rowData[5]} </p>;
+        },
       },
     },
+
     {
       name: "ESTADO",
       label: "Estado",
       options: {
         filter: true,
         sort: false,
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return (
+            <div>
+              <Box
+                sx={{
+                  width: 80,
+                  height: 20,
+                  borderRadius: 5,
+                  bgcolor: tableMeta.rowData[6] === "Impreso" ? "green" : "red",
+                }}
+                className="text-center"
+              >
+                <Typography variant="inherit" sx={{ color: "white" }}>
+                  {tableMeta.rowData[6]}
+                </Typography>
+              </Box>
+            </div>
+          );
+        },
       },
     },
     {
@@ -244,6 +265,17 @@ const TbTraspaso2 = ({ fecha }) => {
     download: false,
     viewColumns: false,
     selectableRows: "none",
+    setRowProps: (row, dataIndex, rowIndex) => {
+      const rowData = row || [];
+      //Se obtiene el estado con los props y children, ya que esta dentro de varios componentes
+      const estado = rowData[6].props.children.props.children.props.children;
+      return {
+        style: {
+          backgroundColor: estado === "Cancelado" ? "red" : "inherit",
+          color: "white"
+        },
+      };
+    },
     textLabels: {
       body: {
         noMatch: "No se encontraron detalles.",
