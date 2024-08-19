@@ -1,5 +1,4 @@
 const apiUrl = process.env.REACT_APP_URL_PETICIONES;
-
 //Función modificada que verifica si la respuesta de la api es un error de usuario o red
 const fetchLogin = async (usuario, contra) => {
 
@@ -53,6 +52,7 @@ const fetchLogin = async (usuario, contra) => {
     }
   }
 };
+
 const fetchTraspasos = async (fecha) => {
   try {
     const myHeaders = new Headers();
@@ -75,6 +75,9 @@ const fetchTraspasos = async (fecha) => {
     }
     const result = await response.text();
 
+
+   
+
     let parsedResult;
     try {
       parsedResult = JSON.parse(result);
@@ -96,7 +99,7 @@ const fetchTraspasos = async (fecha) => {
     return modifiedData;
   } catch (error) {
     console.error("Error en fetchTraspasos:", error.message);
-    throw error; // Re-lanzar el error para manejarlo en el componente que llame a fetchTraspasos
+    throw error;
   }
 };
 
@@ -248,7 +251,9 @@ const registerEvidence = async (nombre, docid, file) => {
   }
 };
 
+
 const uploadPhoto = async (docId, file) => {
+
   try {
     const photoData = new FormData();
     photoData.append("opcion", "48");

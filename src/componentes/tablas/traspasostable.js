@@ -26,15 +26,14 @@ const TbTraspaso = ({ fecha }) => {
   const { theme } = useThemeContext();
 
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true); // Estado para controlar la carga de datos
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [rowIndex, setRowIndex] = useState(null);
   const [updateValue, setUpdateValue] = useState(null);
-  const [fileName, setFileName] = useState("");
   const [name, setName] = useState("");
   const [iddoc, setIddoc] = useState("");
   const [file, setFile] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); // Estado para el btn
+  const [isLoading, setIsLoading] = useState(false); 
 
   const handleOpen = (index, update, iddoc) => {
     setRowIndex(index);
@@ -46,8 +45,6 @@ const TbTraspaso = ({ fecha }) => {
   const handleClose = () => {
     setOpen(false);
     setIddoc("");
-    setFileName("");
-    setName("");
   };
 
   const handleFileChange = (event) => {
@@ -60,7 +57,7 @@ const TbTraspaso = ({ fecha }) => {
       try {
         const filteredData = await fetchTraspasos(fecha);
         setData(filteredData);
-        setLoading(false); // Una vez cargados los datos, establece loading a false
+        setLoading(false); //establece loading a false
       } catch (error) {
         console.error("Error en fetchDataAndSetData:", error.message);
       }
@@ -78,73 +75,25 @@ const TbTraspaso = ({ fecha }) => {
       toastr.info("No se ha seleccionado ningún archivo");
       return;
     }
-
     setIsLoading(true);
-
     try {
       const registerResult = await registerEvidence(name, iddoc, file);
-
       if (
-        registerResult.status === "exitoso" ||
-        registerResult.status === "success"
+        registerResult.status === "exitoso" 
       ) {
-        await uploadPhotoAndRefreshTable(iddoc, file);
+        await uploadPhoto(iddoc, file);
         toastr.success("Evidencia registrada exitosamente");
+        iddoc = null;
+        file = null;
       } else {
         toastr.error("Error al registrar la evidencia");
       }
     } catch (error) {
-      console.error("Error en handleRegister:", error.message);
-      toastr.error("Error al registrar la evidencia");
     } finally {
       setIsLoading(false);
       handleClose();
+      refreshTable();
     }
-  };
-
-  const uploadPhotoAndRefreshTable = async (docId, selectedFile) => {
-    try {
-      //Se comprime la imagen
-      const compressedImage = await compressImage(selectedFile, 60);
-
-      //Se envia la imagen comprimida
-      const photoUploadResult = await uploadPhoto(docId, compressedImage);
-      if (
-        photoUploadResult.status === "exitoso" ||
-        photoUploadResult.status === "success"
-      ) {
-        await refreshTable(); // Actualiza la tabla después de subir la foto
-      } else {
-        toastr.error("Error al subir la foto");
-      }
-    } catch (error) {
-      console.error("Error en uploadPhotoAndRefreshTable:", error.message);
-      toastr.error("Error al subir la foto");
-    }
-  };
-
-  const compressImage = (imagenComoArchivo, porcentajeCalidad) => {
-    return new Promise((resolve, reject) => {
-      const $canvas = document.createElement("canvas");
-      const imagen = new Image();
-      imagen.onload = () => {
-        $canvas.width = imagen.width;
-        $canvas.height = imagen.height;
-        $canvas.getContext("2d").drawImage(imagen, 0, 0);
-        $canvas.toBlob(
-          (blob) => {
-            if (blob === null) {
-              return reject(blob);
-            } else {
-              resolve(blob);
-            }
-          },
-          "image/jpeg",
-          porcentajeCalidad / 100
-        );
-      };
-      imagen.src = URL.createObjectURL(imagenComoArchivo);
-    });
   };
 
   const refreshTable = async () => {
@@ -343,7 +292,7 @@ const TbTraspaso = ({ fecha }) => {
             </Typography>
 
             <TextField
-              label="Nombre del archivo"
+              label="Nombre"
               variant="outlined"
               fullWidth
               value={name}
