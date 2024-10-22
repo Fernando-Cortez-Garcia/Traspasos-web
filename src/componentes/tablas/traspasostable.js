@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import MUIDataTable from "mui-datatables";
 import {
   Button,
@@ -21,6 +21,10 @@ import "react-toastify/dist/ReactToastify.css";
 import toastr from "toastr";
 
 import { useThemeContext } from "../../theme/ThemeContextProvider.tsx";
+import imageCompression from 'browser-image-compression';
+import { PhotoProvider, PhotoView } from "react-photo-view";
+import 'react-photo-view/dist/react-photo-view.css';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const TbTraspaso = ({ fecha }) => {
   const { theme } = useThemeContext();
@@ -33,7 +37,10 @@ const TbTraspaso = ({ fecha }) => {
   const [name, setName] = useState("");
   const [iddoc, setIddoc] = useState("");
   const [file, setFile] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); 
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef(null);
+
 
   const handleOpen = (index, update, iddoc) => {
     setRowIndex(index);
@@ -47,9 +54,22 @@ const TbTraspaso = ({ fecha }) => {
     setIddoc("");
   };
 
-  const handleFileChange = (event) => {
+  const handleFileChange = async (event) => {
     const selectedFile = event.target.files[0];
-    setFile(selectedFile);
+
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    }
+
+    try {
+      const compressedFile = await imageCompression(selectedFile, options);
+      setFile(compressedFile);
+      setPreviewUrl(URL.createObjectURL(compressedFile));
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
@@ -77,24 +97,35 @@ const TbTraspaso = ({ fecha }) => {
     }
     setIsLoading(true);
     try {
-      const registerResult = await registerEvidence(name, iddoc, file);
-      if (
-        registerResult.status === "exitoso" 
-      ) {
+      const registerResult = await registerEvidence(name, iddoc);
+      if (registerResult.status === "exitoso") {
         await uploadPhoto(iddoc, file);
         toastr.success("Evidencia registrada exitosamente");
-        iddoc = null;
-        file = null;
       } else {
         toastr.error("Error al registrar la evidencia");
       }
     } catch (error) {
+      console.log(error)
     } finally {
+      setIddoc(null)
+      setFile(null)
+      setName("")
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       setIsLoading(false);
       handleClose();
       refreshTable();
     }
   };
+
+  const handleDeleteImage = () => {
+    setFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
 
   const refreshTable = async () => {
     try {
@@ -256,7 +287,7 @@ const TbTraspaso = ({ fecha }) => {
       },
     },
   };
-  
+
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
@@ -299,7 +330,53 @@ const TbTraspaso = ({ fecha }) => {
               onChange={(e) => setName(e.target.value)}
               className="mb-4 mt-4"
             />
+
+            <Box
+            >
+              {file !== null ? (
+                <Box
+                  sx={{
+                    m: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <PhotoProvider>
+                    <PhotoView src={previewUrl}>
+                      <img
+                        src={previewUrl}
+                        alt="Previsualización de la imagen"
+                        style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
+                      />
+                    </PhotoView>
+                  </PhotoProvider>
+                  <Button
+                    variant="contained"
+                    onClick={handleDeleteImage}
+                    sx={{
+                      float: "center",
+                      bgcolor: "#FD5361",
+                      "&:hover": { bgcolor: "#d83e49" },
+                    }}
+                    className="mt-1 text-center"
+                  >
+                    <DeleteIcon></DeleteIcon>
+                  </Button>
+                </Box>
+
+              ) : (
+                <Box component="section" sx={{ p: 2, mt: 1, mb: 2, bgcolor: 'warning.main', borderRadius: 1 }}>
+                  <Typography color={"white"} >
+                    No se ha seleccionado ninguna imagen
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+
             <input
+              ref={fileInputRef}
               type="file"
               className="form form-control"
               onChange={handleFileChange}

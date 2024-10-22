@@ -19,7 +19,7 @@ import {
 } from "@mui/material";
 import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import {
-  AddAPhoto,
+  InsertPhoto,
   KeyboardArrowLeft,
   KeyboardArrowRight,
 } from "@mui/icons-material";
@@ -252,7 +252,7 @@ const TbTraspaso2 = ({ fecha }) => {
             component="label"
             onClick={() => handleOpenModal(tableMeta.rowData[0])} // Passing DOCID as iddoc
           >
-            <AddAPhoto />
+            <InsertPhoto />
           </LoadingButton>
         ),
       },

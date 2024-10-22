@@ -217,7 +217,7 @@ const fetchTraspasosCheck = async (fecha) => {
   }
 };
 
-const registerEvidence = async (nombre, docid, file) => {
+const registerEvidence = async (nombre, docid) => {
   try {
     const formData = new FormData();
     formData.append("opcion", "47");
