@@ -36,12 +36,12 @@ export default function SignIn() {
   //Funciones
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
+
     const data = new FormData(event.currentTarget);
     const user = data.get("email");
     const password = data.get("password");
 
-    if(!validateFields(user, password)){
+    if (!validateFields(user, password)) {
       return;
     }
 
@@ -68,92 +68,93 @@ export default function SignIn() {
 
   const validateFields = (user, password) => {
     let isValid = true;
-  
+
     // Reset error states
     setErrorEmail(false);
     setErrorPassword(false);
-  
+
     // Check if user field is empty
     if (!user) {
       setErrorEmail(true);
       isValid = false;
     }
-  
+
     // Check if password field is empty
     if (!password) {
       setErrorPassword(true);
       isValid = false;
     }
-  
+
     return isValid;
   };
-  
+
   const handleCloseSnackbar = () => {
     setOpenSnackBar(false);
   }
 
   return (
-    <body>
-        <Container id="contenedor" component="main" maxWidth="xs">
-          <CssBaseline />
+
+    <>
+      <Container id="contenedor" component="main" maxWidth="xs">
+        <CssBaseline />
+        <Box
+          sx={{
+            marginTop: 8,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <Avatar sx={{ m: 1, bgcolor: "#f50057" }}>
+            <LockOutlinedIcon />
+          </Avatar>
+          <Typography component="h1" variant="h5">
+            Traspasos Hidalgo
+          </Typography>
           <Box
-            sx={{
-              marginTop: 8,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
+            component="form"
+            onSubmit={handleSubmit}
+            noValidate
+            sx={{ mt: 1 }}
           >
-            <Avatar sx={{ m: 1, bgcolor: "#f50057" }}>
-              <LockOutlinedIcon />
-            </Avatar>
-            <Typography component="h1" variant="h5">
-              Traspasos Hidalgo
-            </Typography>
-            <Box
-              component="form"
-              onSubmit={handleSubmit}
-              noValidate
-              sx={{ mt: 1 }}
+            <TextField
+              error={errorEmail}
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Usuario"
+              name="email"
+              autoComplete="email"
+              autoFocus
+            />
+
+            <PasswordField error={errorPasswrod} />
+
+            <LoadingButton
+              loading={loadingLogin}
+              type="submit"
+              fullWidth
+              variant="contained"
+              bgcolor="red"
+              sx={{ mt: 3, mb: 2 }}
             >
-              <TextField
-                error={errorEmail}
-                margin="normal"
-                required
-                fullWidth
-                id="email"
-                label="Usuario"
-                name="email"
-                autoComplete="email"
-                autoFocus
-              />
-
-              <PasswordField error={errorPasswrod} />
-
-              <LoadingButton
-                loading={loadingLogin}
-                type="submit"
-                fullWidth
-                variant="contained"
-                bgcolor="red"
-                sx={{ mt: 3, mb: 2 }}
-              >
-                Iniciar
-              </LoadingButton>
-            </Box>
+              Iniciar
+            </LoadingButton>
           </Box>
-          <Copyright sx={{ mt: 8, mb: 4 }} />
-        </Container>
-        <Snackbar open={openSnackbar} autoHideDuration={2000} onClose={handleCloseSnackbar}>
-          <Alert
-            severity="error"
-            variant="filled"
-            sx={{ width: "100%" }}
-          >
-            { errorSnackbar }
-          </Alert>
-        </Snackbar>
-    </body>
+        </Box>
+        <Copyright sx={{ mt: 8, mb: 4 }} />
+      </Container>
+      <Snackbar open={openSnackbar} autoHideDuration={2000} onClose={handleCloseSnackbar}>
+        <Alert
+          severity="error"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {errorSnackbar}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
 

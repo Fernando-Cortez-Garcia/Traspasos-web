@@ -36,8 +36,8 @@ const TbTraspaso = ({ fecha }) => {
   const [updateValue, setUpdateValue] = useState(null);
   const [name, setName] = useState("");
   const [iddoc, setIddoc] = useState("");
-  const [file, setFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [file, setFile] = useState([]);
+  const [previewUrl, setPreviewUrl] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -55,22 +55,36 @@ const TbTraspaso = ({ fecha }) => {
   };
 
   const handleFileChange = async (event) => {
-    const selectedFile = event.target.files[0];
+    const selectedFiles = Array.from(event.target.files); // Convertir FileList a un array
 
     const options = {
       maxSizeMB: 1,
       maxWidthOrHeight: 1920,
       useWebWorker: true,
-    }
+    };
 
     try {
-      const compressedFile = await imageCompression(selectedFile, options);
-      setFile(compressedFile);
-      setPreviewUrl(URL.createObjectURL(compressedFile));
+      const compressedFiles = await Promise.all(
+        selectedFiles.map(async (file) => {
+          const compressedFile = await imageCompression(file, options);
+          return compressedFile;
+        })
+      );
+
+      const newPreviewUrls = compressedFiles.map((file) =>
+        URL.createObjectURL(file)
+      );
+
+      setFile((prevFiles) => [...prevFiles, ...compressedFiles]);
+      setPreviewUrl((prevUrls) => [...prevUrls, ...newPreviewUrls]);
+
+      toastr.success("Evidencia cargada correctamente");
+
     } catch (error) {
       console.log(error);
-    }
+    } 
   };
+
 
   useEffect(() => {
     const fetchDataAndSetData = async () => {
@@ -79,6 +93,8 @@ const TbTraspaso = ({ fecha }) => {
         setData(filteredData);
         setLoading(false); //establece loading a false
       } catch (error) {
+        setData([])
+        setLoading(false)
         console.error("Error en fetchDataAndSetData:", error.message);
       }
     };
@@ -91,25 +107,25 @@ const TbTraspaso = ({ fecha }) => {
       toastr.info("El nombre está vacío");
       return;
     }
-    if (file === null) {
-      toastr.info("No se ha seleccionado ningún archivo");
+    if (file.length === 0) {
+      toastr.info("No se han seleccionado archivos");
       return;
     }
     setIsLoading(true);
     try {
       const registerResult = await registerEvidence(name, iddoc);
       if (registerResult.status === "exitoso") {
-        await uploadPhoto(iddoc, file);
-        toastr.success("Evidencia registrada exitosamente");
+        await Promise.all(file.map(file => uploadPhoto(iddoc, file)));
+        toastr.success("Evidencias registradas exitosamente");
       } else {
-        toastr.error("Error al registrar la evidencia");
+        toastr.error("Error al registrar las evidencias");
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     } finally {
-      setIddoc(null)
-      setFile(null)
-      setName("")
+      setFile([]);
+      setPreviewUrl([]);
+      setName("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -119,13 +135,11 @@ const TbTraspaso = ({ fecha }) => {
     }
   };
 
-  const handleDeleteImage = () => {
-    setFile(null);
-    setPreviewUrl(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  }
+
+  const handleDeleteImage = (indexToDelete) => {
+    setFile((prevFiles) => prevFiles.filter((_, index) => index !== indexToDelete));
+    setPreviewUrl((prevUrls) => prevUrls.filter((_, index) => index !== indexToDelete));
+  };
 
   const refreshTable = async () => {
     try {
@@ -288,17 +302,38 @@ const TbTraspaso = ({ fecha }) => {
     },
   };
 
-  return (
+  if (loading) return (
+    <Box sx={{ width: "100%", overflow: "hidden" }}>
+      <Skeleton animation="wave" height={400} />
+    </Box>
+  )
+
+  if (data.length === 0) return (
+    <Box
+      component="section"
+      sx={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: 400,
+        boxShadow: 5,
+        p: 4,
+        mt: 1,
+        mb: 2,
+        borderRadius: 3,
+        textAlign: "center"
+      }}
+    >
+      <Typography>
+        Sin traspasos pendientes
+      </Typography>
+    </Box>
+  )
+  if (data.length > 0) return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
-        {loading ? (
-          <Box sx={{ width: "100%", overflow: "hidden" }}>
-            <Skeleton animation="wave" height={400} />
-          </Box>
-        ) : (
-          <MUIDataTable data={data} columns={columns} options={options} />
-        )}
-
+        <MUIDataTable data={data} columns={columns} options={options} />
         <Modal
           open={open}
           onClose={handleClose}
@@ -312,10 +347,11 @@ const TbTraspaso = ({ fecha }) => {
               left: "50%",
               transform: "translate(-50%, -50%)",
               width: 400,
+              maxHeight: "100vh",
               bgcolor: "background.paper",
               border: "2px solid #000",
               boxShadow: 24,
-              p: 4,
+              p: 4
             }}
           >
             <Typography id="modal-modal-title" variant="h6" component="h2">
@@ -332,76 +368,111 @@ const TbTraspaso = ({ fecha }) => {
             />
 
             <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 2,
+                mb: 5,
+                width: '100%',
+                maxWidth: 400,
+              }}
             >
-              {file !== null ? (
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="form form-control"
+                onChange={handleFileChange}
+                style={{ width: '100%' }}
+                multiple
+              />
+
+              <Button
+                variant="contained"
+                onClick={handleRegister}
+                sx={{
+                  width: '100%',
+                  bgcolor: "#4CAF50",
+                  "&:hover": { bgcolor: "#388E3C" },
+                }}
+                disabled={isLoading} // Deshabilita el botón cuando está cargando
+              >
+                {isLoading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  <>
+                    Registrar
+                    <AutorenewIcon sx={{ ml: 1 }} />
+                  </>
+                )}
+              </Button>
+            </Box>
+
+
+            <Box>
+              {previewUrl.length > 0 ? (
                 <Box
                   sx={{
                     m: 2,
                     display: "flex",
-                    flexDirection: "column",
+                    flexDirection: "row",
                     justifyContent: "center",
-                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 2,
+                    maxHeight: "50vh",
+                    overflowY: "auto",
                   }}
                 >
-                  <PhotoProvider>
-                    <PhotoView src={previewUrl}>
-                      <img
-                        src={previewUrl}
-                        alt="Previsualización de la imagen"
-                        style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
-                      />
-                    </PhotoView>
-                  </PhotoProvider>
-                  <Button
-                    variant="contained"
-                    onClick={handleDeleteImage}
-                    sx={{
-                      float: "center",
-                      bgcolor: "#FD5361",
-                      "&:hover": { bgcolor: "#d83e49" },
-                    }}
-                    className="mt-1 text-center"
-                  >
-                    <DeleteIcon></DeleteIcon>
-                  </Button>
+                  {previewUrl.map((url, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        m: 2,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <PhotoProvider key={index}>
+                        <PhotoView src={url}>
+                          <img
+                            src={url}
+                            alt={`Previsualización ${index}`}
+                            style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
+                          />
+                        </PhotoView>
+                      </PhotoProvider>
+                      <Button
+                        variant="contained"
+                        onClick={() => handleDeleteImage(index)}
+                        sx={{
+                          float: "center",
+                          bgcolor: "#FD5361",
+                          "&:hover": { bgcolor: "#d83e49" },
+                        }}
+                        className="mt-1 text-center"
+                      >
+                        <DeleteIcon></DeleteIcon>
+                      </Button>
+                    </Box>
+                  ))}
                 </Box>
-
               ) : (
-                <Box component="section" sx={{ p: 2, mt: 1, mb: 2, bgcolor: 'warning.main', borderRadius: 1 }}>
-                  <Typography color={"white"} >
-                    No se ha seleccionado ninguna imagen
-                  </Typography>
+                <Box
+                  component="section"
+                  sx={{
+                    p: 2,
+                    mt: 1,
+                    mb: 2,
+                    bgcolor: 'warning.main',
+                    borderRadius: 1,
+                    textAlign: "center"
+                  }}>
+                  <Typography color={"white"}>Selecciona una ó varias imágenes</Typography>
                 </Box>
               )}
             </Box>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="form form-control"
-              onChange={handleFileChange}
-            />
-            <Button
-              variant="contained"
-              onClick={handleRegister}
-              sx={{
-                mt: 2,
-                float: "right",
-                bgcolor: "#4CAF50",
-                "&:hover": { bgcolor: "#388E3C" },
-              }}
-              className="mt-5"
-              disabled={isLoading} // Deshabilita el botón cuando está cargando
-            >
-              {isLoading ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                <>
-                  Registrar
-                  <AutorenewIcon sx={{ ml: 1 }} />
-                </>
-              )}
-            </Button>
           </Box>
         </Modal>
       </ThemeProvider>

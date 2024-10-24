@@ -122,22 +122,32 @@ function ResponsiveAppBar() {
             >
               {/* Botones de topbar */}
               {/* Modo oscuro */}
+
               <NightModeToggle />
 
               {/* Cerrar sesión */}
-              <Button
+              <Box
                 onClick={logOut}
                 sx={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  bgcolor: "background.default",
+                  backgroundColor: "background.default",
                   color: "text.primary",
-                  p: 2,
+                  padding: "16px",
                   width: "100%",
+                  cursor: "pointer",
+                  transition: "background-color 0.8s", 
+                  '&:hover': {
+                    backgroundColor: '#ffc4c4',
+                  },
                 }}
-              > Salir <IconButton sx={{ ml: 1 }} color="inherit"> <ExitToApp /> </IconButton>
-              </Button>
+              >
+                Salir
+                <IconButton sx={{ ml: 1 }} color="inherit">
+                  <ExitToApp />
+                </IconButton>
+              </Box>
             </Menu>
           </Box>
         </Toolbar>

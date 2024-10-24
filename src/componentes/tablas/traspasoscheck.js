@@ -1,43 +1,33 @@
 import React, { useEffect, useState } from "react";
 
 // Componentes de terceros
-import SwipeableViews from "react-swipeable-views-react-18-fix";
 import MUIDataTable from "mui-datatables";
-import { Lightbox } from "react-modal-image";
 
 // Componentes de Material-UI
 import { LoadingButton } from "@mui/lab";
 import {
-  Button,
   Modal,
   Box,
   Typography,
-  Skeleton,
-  TextField,
-  MobileStepper,
-  Paper,
+  Skeleton
 } from "@mui/material";
 import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import {
-  InsertPhoto,
-  KeyboardArrowLeft,
-  KeyboardArrowRight,
+  InsertPhoto
 } from "@mui/icons-material";
 
 // Funciones de API
 import {
   fetchTraspasosCheck,
-  registerEvidence,
-  uploadPhoto,
   fetchDetallesTraspasos,
   fetchFotosTraspasos,
 } from "../../api/peticiones"; // Importamos las funciones desde api.js
 
 import { useThemeContext } from "../../theme/ThemeContextProvider.tsx";
+import { PhotoProvider, PhotoView } from "react-photo-view";
 
 //Enviroment variable
 const IMAGES_URL = process.env.REACT_APP_URL_IMAGES_TRASPASOS;
-const IMAGES_NO_AVAILABLE = process.env.REACT_APP_URL_IMAGE_NO_AVAILABLE;
 
 const TbTraspaso2 = ({ fecha }) => {
   //Tema
@@ -48,18 +38,8 @@ const TbTraspaso2 = ({ fecha }) => {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [iddoc, setIddoc] = useState(null);
-  const [name, setName] = useState("");
-  const [file, setFile] = useState(null);
-  //Carousel
   const [photoData, setPhotoData] = useState([]);
-  const [activeStep, setActiveStep] = useState(0);
-  const maxSteps = photoData.length;
-  //image zoom
-  const [openImage, setOpenImage] = useState(false);
-  const [currentImage, setCurrentImage] = useState(null);
-  //loading
   const [loadingDetails, setLoadingDetails] = useState({});
-  //useEffect = onMounted de Vue ó callback de fecha
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -67,19 +47,14 @@ const TbTraspaso2 = ({ fecha }) => {
         setData(filteredData);
         setLoading(false);
       } catch (error) {
+        setData([]);
+        setLoading(false)
         console.error("Error:", error.message);
       }
     };
 
     fetchData();
   }, [fecha]);
-
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setFile(file);
-    }
-  };
 
   const handleOpenModal = (iddoc) => {
     setIddoc(iddoc);
@@ -89,37 +64,6 @@ const TbTraspaso2 = ({ fecha }) => {
 
   const handleCloseModal = () => {
     setOpen(false);
-  };
-
-  const handleRegister = async () => {
-    try {
-      await registerEvidence(name, iddoc, file);
-      const photoResult = await uploadPhoto(iddoc, file);
-
-      if (
-        photoResult.status === "exitoso" ||
-        photoResult.status === "success"
-      ) {
-        alert("Registro y subida de foto exitosos.");
-        await refreshTable();
-      } else {
-        alert("Hubo un error al intentar subir la foto.");
-      }
-
-      handleCloseModal();
-    } catch (error) {
-      console.error("Error en handleRegister:", error.message);
-      alert("Hubo un error al intentar registrar la evidencia.");
-    }
-  };
-
-  const refreshTable = async () => {
-    try {
-      const filteredData = await fetchTraspasosCheck(fecha);
-      setData(filteredData);
-    } catch (error) {
-      console.error("Error en refreshTable:", error.message);
-    }
   };
 
   const fetchDetailsData = async (iddoc) => {
@@ -146,16 +90,6 @@ const TbTraspaso2 = ({ fecha }) => {
       }));
       console.error("Error en fetchDetailsData:", error.message);
     }
-  };
-
-  const openLightbox = (image) => {
-    setCurrentImage(image);
-    setOpenImage(true);
-  };
-
-  const closeLightbox = () => {
-    setOpenImage(false);
-    setCurrentImage(null);
   };
 
   //-----------------------------------
@@ -332,22 +266,7 @@ const TbTraspaso2 = ({ fecha }) => {
         filter: true,
         sort: true,
       },
-    },
-    // {
-    //   name: "Evidencia",
-    //   label: "Registrar",
-    //   options: {
-    //     customBodyRender: (value, tableMeta, updateValue) => (
-    //       <Button
-    //         variant="contained"
-    //         component="label"
-    //         onClick={() => handleOpenModal(tableMeta.rowData[0])} // Passing DOCID as iddoc
-    //       >
-    //         <InsertPhotoIcon />
-    //       </Button>
-    //     ),
-    //   },
-    // },
+    }
   ];
 
   const optionsDetailDatatable = {
@@ -399,39 +318,40 @@ const TbTraspaso2 = ({ fecha }) => {
     },
   };
 
-  //-----------------------------------
-  //            Carousel
-  //-----------------------------------
 
-  const handleNext = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
-  };
+  if (loading) return (
+    <Box sx={{ width: "100%", overflow: "hidden" }}>
+      <Skeleton animation="wave" height={400} />
+    </Box>
+  )
 
-  const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
-  };
+  if (data.length === 0) return (
+    <Box
+      component="section"
+      sx={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: 400,
+        boxShadow: 5,
+        p: 4,
+        mt: 1,
+        mb: 2,
+        borderRadius: 3,
+        textAlign: "center"
+      }}
+    >
+      <Typography>
+        Sin traspasos completados
+      </Typography>
+    </Box>
+  )
 
-  const handleStepChange = (step) => {
-    setActiveStep(step);
-  };
-
-  const stylesCarousel = {
-    slide: {
-      overflow: "hidden!important",
-    },
-  };
-
-  return (
+  if (data.length > 0) return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
-        {loading ? (
-          <Box sx={{ width: "100%", overflow: "hidden" }}>
-            <Skeleton animation="wave" height={400} />
-          </Box>
-        ) : (
-          <MUIDataTable data={data} columns={columns} options={options} />
-        )}
-
+        <MUIDataTable data={data} columns={columns} options={options} />
         <Modal
           open={open}
           onClose={handleCloseModal}
@@ -465,74 +385,26 @@ const TbTraspaso2 = ({ fecha }) => {
               </Typography>
             </Box>
 
-            <SwipeableViews
-              axis={theme.direction === "rtl" ? "x-reverse" : "x"}
-              index={activeStep}
-              onChangeIndex={handleStepChange}
-              enableMouseEvents
-              slideStyle={{ overflow: "hidden" }}
-            >
+            <div className="row text-center justify-content-center">
               {photoData.map((slotProps, index) => (
-                <div
-                  key={slotProps.idCajasFotos}
-                  onClick={() =>
-                    openLightbox(`${IMAGES_URL}${slotProps.imagen}`)
-                  }
-                  className="row text-center justify-content-center"
-                >
-                  <img
-                    src={`${IMAGES_URL}${slotProps.imagen}`}
-                    alt="Imagen de evidencia"
-                    style={{ maxWidth: "200px" }}
-                  />
+                <div key={slotProps.idCajasFotos} className="col-6 col-md-4 col-lg-3 mb-4">
+                  <PhotoProvider>
+                    <PhotoView src={`${IMAGES_URL}${slotProps.imagen}`}>
+                      <img
+                        src={`${IMAGES_URL}${slotProps.imagen}`}
+                        alt={`Previsualización ${index}`}
+                        style={{
+                          width: "100%",
+                          height: "150px",
+                          objectFit: "cover",
+                          borderRadius: "8px"
+                        }}
+                      />
+                    </PhotoView>
+                  </PhotoProvider>
                 </div>
               ))}
-            </SwipeableViews>
-
-            {maxSteps !== 0 ? (
-              <MobileStepper
-                variant="dots"
-                steps={maxSteps}
-                position="static"
-                activeStep={activeStep}
-                nextButton={
-                  <Button
-                    size="small"
-                    onClick={handleNext}
-                    disabled={activeStep === maxSteps - 1}
-                  >
-                    Siguiente
-                    {theme.direction === "rtl" ? (
-                      <KeyboardArrowLeft />
-                    ) : (
-                      <KeyboardArrowRight />
-                    )}
-                  </Button>
-                }
-                backButton={
-                  <Button
-                    size="small"
-                    onClick={handleBack}
-                    disabled={activeStep === 0}
-                  >
-                    {theme.direction === "rtl" ? (
-                      <KeyboardArrowRight />
-                    ) : (
-                      <KeyboardArrowLeft />
-                    )}
-                    Previo
-                  </Button>
-                }
-              />
-            ) : (
-              <div className="row text-center justify-content-center">
-                <img
-                  src={IMAGES_NO_AVAILABLE}
-                  alt="Imagen no disponible"
-                  style={{ maxWidth: "200px" }}
-                />
-              </div>
-            )}
+            </div>
 
             <Box mt={2}>
               <Typography variant="h6" className="mt-4 mb-3" align="center">
@@ -549,18 +421,6 @@ const TbTraspaso2 = ({ fecha }) => {
             }
           </Box>
         </Modal>
-
-        {/* Se coloca el zoom de la imagen seleccionada en el modal fuera del modal para
-        mostrar la imagen segun el vw y el vh de la pantalla del cliente */}
-
-        {openImage && (
-          <Lightbox
-            medium={currentImage}
-            hideDownload="true"
-            alt="Imagen de evidencia"
-            onClose={closeLightbox}
-          />
-        )}
       </ThemeProvider>
     </StyledEngineProvider>
   );
