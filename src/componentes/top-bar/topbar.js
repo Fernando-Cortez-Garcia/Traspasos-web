@@ -140,6 +140,7 @@ function ResponsiveAppBar() {
                   transition: "background-color 0.8s", 
                   '&:hover': {
                     backgroundColor: '#ffc4c4',
+                    color: 'black'
                   },
                 }}
               >
