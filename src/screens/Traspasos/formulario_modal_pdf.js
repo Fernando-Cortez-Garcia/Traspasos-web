@@ -114,7 +114,10 @@ const FormularioModalPdf = () => {
         tipo,
         filtro
       );
-      setDataReport(filteredData);
+      const normalizedData = Array.isArray(filteredData)
+      ? filteredData
+      : Object.values(filteredData);
+          setDataReport(normalizedData);
       setIsLoadingData(false);
     } catch (error) {
       console.error("Error en fetchDataAndSetData:", error.message);
@@ -167,8 +170,11 @@ const FormularioModalPdf = () => {
     // Formatear datos en filas ordenadas
     const rows = [];
     sortedData.forEach((item) => {
+
+      // Asegurar que item.contenido siempre sea un array
+      const contenidoArray = Array.isArray(item.contenido) ? item.contenido : [item.contenido];
       // Ordenar contenido por DESCRIPCIÓN
-      const sortedContenido = [...item.contenido].sort((a, b) =>
+      const sortedContenido = [...contenidoArray].sort((a, b) =>
         a.DESCRIPCIO.localeCompare(b.DESCRIPCIO)
       );
 
