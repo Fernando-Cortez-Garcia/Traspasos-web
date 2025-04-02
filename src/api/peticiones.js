@@ -1,4 +1,5 @@
 const apiUrl = process.env.REACT_APP_URL_PETICIONES;
+
 //Función modificada que verifica si la respuesta de la api es un error de usuario o red
 const fetchLogin = async (usuario, contra) => {
 
@@ -52,7 +53,6 @@ const fetchLogin = async (usuario, contra) => {
     }
   }
 };
-
 const fetchTraspasos = async (fecha) => {
   try {
     const myHeaders = new Headers();
@@ -75,9 +75,6 @@ const fetchTraspasos = async (fecha) => {
     }
     const result = await response.text();
 
-
-   
-
     let parsedResult;
     try {
       parsedResult = JSON.parse(result);
@@ -99,7 +96,7 @@ const fetchTraspasos = async (fecha) => {
     return modifiedData;
   } catch (error) {
     console.error("Error en fetchTraspasos:", error.message);
-    throw error;
+    throw error; // Re-lanzar el error para manejarlo en el componente que llame a fetchTraspasos
   }
 };
 
@@ -217,7 +214,7 @@ const fetchTraspasosCheck = async (fecha) => {
   }
 };
 
-const registerEvidence = async (nombre, docid) => {
+const registerEvidence = async (nombre, docid, file) => {
   try {
     const formData = new FormData();
     formData.append("opcion", "47");
@@ -251,9 +248,7 @@ const registerEvidence = async (nombre, docid) => {
   }
 };
 
-
 const uploadPhoto = async (docId, file) => {
-
   try {
     const photoData = new FormData();
     photoData.append("opcion", "48");
@@ -287,6 +282,78 @@ const uploadPhoto = async (docId, file) => {
   }
 };
 
+const fetchTransfersToPdf = async (fechaInicial, fechaFinal, tipo, filtro) => {
+  try {
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", "Bearer YOUR_TOKEN_HERE");
+
+    const formdata = new FormData();
+    formdata.append("opcion", "96.29");
+    formdata.append("fecha", fechaInicial);
+    formdata.append("fecha2", fechaFinal);
+    formdata.append("filtro", tipo);
+    formdata.append("valor_filtro", filtro);
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: formdata,
+      redirect: "follow",
+    };
+
+    const response = await fetch(apiUrl, requestOptions);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const result = await response.text();
+
+    let parsedResult;
+    try {
+      parsedResult = JSON.parse(result);
+      return parsedResult
+    } catch (e) {
+      throw new Error(`JSON parse error: ${e.message}`);
+    }
+  } catch (error) {
+    console.error("Error en fetchTraspasos:", error.message);
+    throw error; // Re-lanzar el error para manejarlo en el componente que llame a fetchTraspasos
+  }
+};
+
+const fetchTransferIssuers = async () => {
+  try {
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", "Bearer YOUR_TOKEN_HERE");
+
+    const formdata = new FormData();
+    formdata.append("opcion", "96.35");
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: formdata,
+      redirect: "follow",
+    };
+
+    const response = await fetch(apiUrl, requestOptions);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const result = await response.text();
+
+    let parsedResult;
+    try {
+      parsedResult = JSON.parse(result);
+      return parsedResult
+    } catch (e) {
+      throw new Error(`JSON parse error: ${e.message}`);
+    }
+  } catch (error) {
+    console.error("Error en fetchTraspasos:", error.message);
+    throw error; // Re-lanzar el error para manejarlo en el componente que llame a fetchTraspasos
+  }
+};
+
 export {
   fetchLogin,
   fetchTraspasos,
@@ -295,4 +362,6 @@ export {
   fetchTraspasosCheck,
   fetchDetallesTraspasos,
   fetchFotosTraspasos,
+  fetchTransfersToPdf,
+  fetchTransferIssuers
 };
