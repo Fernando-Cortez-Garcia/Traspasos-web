@@ -130,7 +130,7 @@ const FormularioModalPdf = () => {
     // Título del documento (centrado y en negritas)
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    const title = "TRASPASOS TALLER";
+    const title = "TRASPASOS Hidalgo";
     const titleWidth = doc.getTextWidth(title);
     const xPosition = (doc.internal.pageSize.width - titleWidth) / 2;
     doc.text(title, xPosition, 15);
@@ -217,7 +217,7 @@ const FormularioModalPdf = () => {
     );
 
     // Guardar PDF
-    doc.save("Traspasos_Taller.pdf");
+    doc.save("Traspasos_Hidalgo.pdf");
   };
 
   return (
