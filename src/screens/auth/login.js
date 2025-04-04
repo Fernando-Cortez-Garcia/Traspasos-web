@@ -216,7 +216,7 @@ function Copyright(props) {
       </Link>{" "}
       {new Date().getFullYear()}
       {"."}
-      {" Versión 1.0.3"} 
+      {" Versión 1.0.4"} 
     </Typography>
 
   );
